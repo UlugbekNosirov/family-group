@@ -1,0 +1,36 @@
+package uz.murodjon.notificationbot.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import uz.murodjon.notificationbot.model.Market;
+import uz.murodjon.notificationbot.repository.MarketRepository;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class MarketService {
+    private final MarketRepository marketRepository;
+
+    public List<Market> findAll() {
+        return marketRepository.findAll(Sort.by("name"));
+    }
+
+    public Market getMarket(Long marketId) {
+        return marketRepository.findById(marketId).get();
+    }
+
+    public void saveMarketName(String name) {
+        Market market = Market.builder()
+                .name(name).build();
+        marketRepository.save(market);
+    }
+
+    public void saveMarketUsername(String username){
+        Market market = marketRepository.getMarketByUsernameIsNull();
+        market.setUsername(username);
+        marketRepository.save(market);
+    }
+
+}
