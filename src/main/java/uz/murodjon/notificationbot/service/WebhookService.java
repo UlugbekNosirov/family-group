@@ -27,11 +27,13 @@ public class WebhookService {
                 String text = message.getText();
                 if (text.equals("/start")) {
                     state = BotState.CHOOSE_MARKET;
-                } else if (text.equals(PASSWORD)) {
+                }else if (text.equals("/balance")) {
+                    state = BotState.GET_BALANCE;
+                }else if (text.equals(PASSWORD)) {
                     state = BotState.SEND_MARKET_NAME;
                 }else if (state==BotState.SEND_MARKET_NAME_TEXT){
                     state=BotState.SEND_USERNAME;
-                } else if (state==BotState.SEND_USERNAME) {
+                }else if (state==BotState.SEND_USERNAME) {
                     state=BotState.GET_USERNAME;
                 }
             } else if (message.hasContact()) {
@@ -53,6 +55,7 @@ public class WebhookService {
             case SEND_MARKET_NAME_TEXT -> botService.enterMarketName(update);
             case SEND_USERNAME -> botService.saveMarketName(update);
             case GET_USERNAME -> botService.saveMarketUsername(update);
+            case GET_BALANCE -> botService.getBalance(update);
         }
         botService.saveData(update, new UserDTO(state));
     }

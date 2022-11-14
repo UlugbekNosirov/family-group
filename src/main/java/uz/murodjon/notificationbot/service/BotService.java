@@ -8,11 +8,15 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import uz.murodjon.notificationbot.feign.TelegramFeign;
 import uz.murodjon.notificationbot.helper.Keyboard;
+import uz.murodjon.notificationbot.model.Balance;
 import uz.murodjon.notificationbot.model.Market;
 import uz.murodjon.notificationbot.model.MessageDTO;
 import uz.murodjon.notificationbot.model.Users;
 import uz.murodjon.notificationbot.payload.UserDTO;
-import uz.murodjon.notificationbot.utils.BotState;
+
+import java.time.LocalDate;
+import java.util.Date;
+import java.util.List;
 
 import static uz.murodjon.notificationbot.utils.Constant.*;
 
@@ -21,6 +25,7 @@ import static uz.murodjon.notificationbot.utils.Constant.*;
 public class BotService {
     private final TelegramFeign feign;
     private final UserService userService;
+    private final BalanceService balanceService;
     public final MarketService marketService;
     private final Keyboard keyboard;
     private final InlineKeyboardService inlineKeyboardService;
@@ -55,12 +60,40 @@ public class BotService {
     }
 
     public void sendMessageToUser(MessageDTO messageDTO, String username) {
+        Users user = userService.getByChatId(messageDTO.getChatId());
+        Market market = marketService.getMarketByUserName(username);
+        balanceService.saveBalance(messageDTO, market, user);
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(messageDTO.getChatId());
-        sendMessage.setText(username + " : " + messageDTO.getText());
+        sendMessage.setText("\uD83C\uDFEA "+market.getName() + "\n" + messageDTO.getText());
         feign.sendMessage(sendMessage);
     }
 
+    public void getBalance(Update update) {
+        Users user = userService.getByChatId(update.getMessage().getChatId().toString());
+        List<Balance> balances = balanceService.findByUsers(user);
+        String text = "";
+        if (balances!=null){
+            for (Balance balance : balances) {
+                text += "\uD83C\uDFEA "+balance.getMarket().getName()+"\n \n"+
+                        "\uD83D\uDCC6 Сана: "+LocalDate.now()+"\n"+
+                        "\uD83D\uDC68\u200D\uD83D\uDCBC Мижоз: "+balance.getUsers().getFirstname()+
+                        " "+balance.getUsers().getLastname()+"\n"+
+                        "\uD83C\uDFC1 Колдик бонус: "+(balance.getBonus()==null?0:balance.getBonus())+"\n"+
+                        "\uD83D\uDCB8 Баланс (UZS): "+(balance.getSum()==null?0:balance.getSum())+"\n"+
+                        "\uD83D\uDCB2 Баланс (USD): "+(balance.getDollar()==null?0:balance.getDollar())+"\n";
+            }
+            if (text.equals("")){
+                text = "Афсуски хозирда сизда хеч кандай баланс хакида маълумот йук";
+            }
+        }else{
+            text = "Афсуски хозирда сизда хеч кандай баланс хакида маълумот йук";
+        }
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(update.getMessage().getChatId().toString());
+        sendMessage.setText(text);
+        feign.sendMessage(sendMessage);
+    }
     public SendMessage createContactMessage(String chatId) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);

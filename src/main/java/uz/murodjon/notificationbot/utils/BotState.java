@@ -8,5 +8,7 @@ public enum BotState {
     SEND_MARKET_NAME_TEXT,
     SEND_USERNAME,
     GET_USERNAME,
+    GET_BONUS,
+    GET_BALANCE,
 
 }

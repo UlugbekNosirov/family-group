@@ -21,6 +21,10 @@ public class MarketService {
         return marketRepository.findById(marketId).get();
     }
 
+    public Market getMarketByUserName(String userName) {
+        return marketRepository.findByUsername(userName);
+    }
+
     public void saveMarketName(String name) {
         Market market = Market.builder()
                 .name(name).build();
@@ -31,6 +35,10 @@ public class MarketService {
         Market market = marketRepository.getMarketByUsernameIsNull();
         market.setUsername(username);
         marketRepository.save(market);
+    }
+
+    public String getMarketName(String userName){
+        return marketRepository.findByUsername(userName).getName();
     }
 
 }

@@ -23,4 +23,6 @@ public interface MarketRepository extends JpaRepository<Market, Long> {
     Long getMarketId();
 
     Market getMarketByUsernameIsNull();
+
+    Market findByUsername(String userName);
 }
