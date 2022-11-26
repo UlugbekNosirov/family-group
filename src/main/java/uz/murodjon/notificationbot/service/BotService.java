@@ -81,7 +81,7 @@ public class BotService {
                         " "+balance.getUsers().getLastname()+"\n"+
                         "\uD83C\uDFC1 Колдик бонус: "+(balance.getBonus()==null?0:balance.getBonus())+"\n"+
                         "\uD83D\uDCB8 Баланс (UZS): "+(balance.getSum()==null?0:balance.getSum())+"\n"+
-                        "\uD83D\uDCB2 Баланс (USD): "+(balance.getDollar()==null?0:balance.getDollar())+"\n";
+                        "\uD83D\uDCB2 Баланс (USD): "+(balance.getDollar()==null?0:balance.getDollar())+"\n\n";
             }
             if (text.equals("")){
                 text = "Афсуски хозирда сизда хеч кандай баланс хакида маълумот йук";
