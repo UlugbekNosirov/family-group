@@ -20,6 +20,7 @@ import uz.dataFin.notificationbot.model.*;
 import uz.dataFin.notificationbot.payload.UserDTO;
 import uz.dataFin.notificationbot.utils.BotState;
 import uz.dataFin.notificationbot.utils.Constant;
+import uz.dataFin.notificationbot.utils.Security;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +43,6 @@ public class BotService {
     public final ProductService productService;
     private final Keyboard keyboard;
 
-    private final static String URI = "http://91.219.62.18/AzizAkaAztech2022/hs";
     private final static String months[] = {"Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktyabr", "Noyabr", "Dekabr"};
 
 
@@ -54,7 +54,6 @@ public class BotService {
     public Boolean getPhone(Update update) {
         return userService.getPhone(update);
     }
-
 
     public void saveData(Update update, UserDTO userDTO) {
         Message message = update.hasMessage() ? update.getMessage() : update.getCallbackQuery().getMessage();
@@ -95,7 +94,7 @@ public class BotService {
                     .setConnectTimeout(Duration.ofSeconds(15))
                     .setReadTimeout(Duration.ofSeconds(60))
                     .build()
-                    .exchange(URI + "/bot/check", HttpMethod.POST, entity, byte[].class);
+                    .exchange(Constant.REQUEST_URI + "/bot/check", HttpMethod.POST, entity, byte[].class);
             System.out.println(response);
             byte[] responseBody = response.getBody();
             if (responseBody != null) {
@@ -119,7 +118,7 @@ public class BotService {
                     feign.sendMessage(sendMessage);
                 }
             } else {
-                SendMessage sendMessage = new SendMessage(chatId.toString(), "Server bilan bog`liq xatolik bo`ldi! Internet sekin yoki ma'lumot hajmi juda yuqori! \n +998(90)309-66-33 bilan bog`laning.");
+                SendMessage sendMessage = new SendMessage(chatId.toString(), "Server bilan bog`liq xatolik bo`ldi! \n Internet sekin yoki ma'lumot hajmi juda yuqori! \n +998(90)309-66-33 bilan bog`laning.");
                 feign.sendMessage(sendMessage);
             }
         }catch (Exception e){
@@ -145,7 +144,7 @@ public class BotService {
                     .setConnectTimeout(Duration.ofSeconds(15))
                     .setReadTimeout(Duration.ofSeconds(60))
                     .build()
-                    .exchange(URI + "/bot/reports", HttpMethod.POST, entity, byte[].class);
+                    .exchange(Constant.REQUEST_URI + "/bot/reports", HttpMethod.POST, entity, byte[].class);
             byte[] responseBody = response.getBody();
             if (responseBody != null) {
                 String text = new String(responseBody, StandardCharsets.UTF_8);
@@ -162,7 +161,6 @@ public class BotService {
         }catch (Exception e){
             SendMessage sendMessage = new SendMessage(chatId.toString(), "Ушбу маҳсулот ҳақида маълумот топилмади!");
             feign.sendMessage(sendMessage);
-            System.out.println(e);
         }
     }
 
@@ -197,7 +195,7 @@ public class BotService {
                     .setConnectTimeout(Duration.ofSeconds(15))
                     .setReadTimeout(Duration.ofSeconds(60))
                     .build()
-                    .exchange(URI + "/bot/reports", HttpMethod.POST, entity, byte[].class);
+                    .exchange(Constant.REQUEST_URI + "/bot/reports", HttpMethod.POST, entity, byte[].class);
             byte[] responseBody = response.getBody();
             if (responseBody != null) {
                 String text = new String(responseBody, StandardCharsets.UTF_8);
@@ -210,22 +208,11 @@ public class BotService {
         }catch (Exception e){
             SendMessage sendMessage = new SendMessage(chatId.toString(), "Сизда баланс бўйича ҳеч қандай маълумот мавжуд эмас!");
             feign.sendMessage(sendMessage);
-            System.out.println(e);
         }
         }else {
             SendMessage sendMessage = new SendMessage(chatId.toString(), "Буйруқдан фойдаланишга рухсат йўқ!");
             feign.sendMessage(sendMessage);
         }
-    }
-
-
-
-
-    public void saveContact(String chatId, Update update) {
-        SendMessage sendMessage = new SendMessage(chatId, Constant.GUIDE_MESSAGE);
-        sendMessage.setReplyMarkup(new ReplyKeyboardRemove(true));
-        sendMessage.setReplyMarkup(keyboard.panelBtns());
-        feign.sendMessage(sendMessage);
     }
 
     public void getReport(BotState state, Update update) {
@@ -259,7 +246,7 @@ public class BotService {
                 }
             }
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println(LocalDate.now()+" "+update.getMessage().getFrom().getFirstName()+", "+update.getMessage().getChatId()+", File jo`natish bilan bog`liq xatolik, botService.getReport");
         }
     }
 
@@ -272,6 +259,7 @@ public class BotService {
             }
         }
         try {
+            assert month != null;
             LocalDate firstDay = LocalDate.now().withMonth(month.getValue()).withDayOfMonth(1);
             LocalDate lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth());
             return new LocalDate[]{firstDay, lastDay};
@@ -341,7 +329,6 @@ public class BotService {
                     "⬅\uFE0FЖараённи қайтадан бошланг");
             feign.sendMessage(sendMessage);
         }
-
     }
 
     public LocalDate setDate(Update update) {
@@ -361,7 +348,7 @@ public class BotService {
             } else {
                 chatId = update.getMessage().getChatId();
             }
-            String uri = "https://api.telegram.org/bot5996854486:AAHKZepV7funiJ90Vja6AoR6HNitzWnfZbo/sendDocument";
+            String uri = "https://api.telegram.org/bot"+ Security.BOT_TOKEN + "/sendDocument";
             HttpPost httppost = new HttpPost(uri);
             if (i==0) {
                 fileService.saveTypeFile(chatId, "xlsx");
@@ -386,11 +373,11 @@ public class BotService {
                 throw new RuntimeException(e);
             }
         } catch (Exception e) {
-            sendClient404Error(e, update);
+            sendClient404Error(update);
         }
     }
 
-    private void sendClient404Error(Exception e, Update update) {
+    private void sendClient404Error(Update update) {
         EditMessageText editMessageText = new EditMessageText();
         Long chatId;
         Integer messageId;
@@ -427,7 +414,7 @@ public class BotService {
             editMessageText.setReplyMarkup(null);
             feign.editMessageText(editMessageText);
         }catch (Exception e){
-            System.out.println(e);
+            System.out.println(LocalDate.now()+" "+update.getMessage().getFrom().getFirstName()+", "+update.getMessage().getChatId()+", Davr saqlashda xatolik yuz berdi, botService.sendAllDate");
         }
     }
 

@@ -6,6 +6,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import uz.dataFin.notificationbot.model.DateDTO;
 import uz.dataFin.notificationbot.repository.FileRepository;
+import uz.dataFin.notificationbot.utils.Constant;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -13,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -20,7 +22,6 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class FileService {
     private final FileRepository fileRepository;
-    private final static String URI = "http://91.219.62.18/AzizAkaAztech2022/hs";
 
     public void saveEndDate(Long userId, String endDate) {
         DateDTO dto = fileRepository.getDateDTOByClientId(userId.toString());
@@ -61,13 +62,13 @@ public class FileService {
                     .setConnectTimeout(Duration.ofSeconds(60))
                     .setReadTimeout(Duration.ofSeconds(60))
                     .build()
-                    .exchange(URI+"/bot/reports", HttpMethod.POST, entity, byte[].class);
+                    .exchange(Constant.REQUEST_URI +"/bot/reports", HttpMethod.POST, entity, byte[].class);
             Path path= Paths.get("REPORTS");
             path=checkPackage(path);
             Files.write(Paths.get(path.toFile().getAbsolutePath()+"/report."+dateDTO.getTypeFile()), Objects.requireNonNull(response.getBody()));
             return new File(path.toFile().getAbsolutePath()+"/report."+dateDTO.getTypeFile());
         }catch (Exception e){
-            System.out.println(e);
+            System.out.println(LocalDate.now()+" "+dateDTO.getClientId()+", "+", File qabul qilib olishda xatolik, fileService.getReports");
         }
         return null;
     }

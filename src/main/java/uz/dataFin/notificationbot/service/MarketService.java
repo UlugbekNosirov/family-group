@@ -25,20 +25,4 @@ public class MarketService {
         return marketRepository.findByUsername(userName);
     }
 
-    public void saveMarketName(String name) {
-        Market market = Market.builder()
-                .name(name).build();
-        marketRepository.save(market);
-    }
-
-    public void saveMarketUsername(String username){
-        Market market = marketRepository.getMarketByUsernameIsNull();
-        market.setUsername(username);
-        marketRepository.save(market);
-    }
-
-    public String getMarketName(String userName){
-        return marketRepository.findByUsername(userName).getName();
-    }
-
 }

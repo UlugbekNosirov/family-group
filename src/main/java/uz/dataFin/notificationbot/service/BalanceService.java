@@ -15,10 +15,6 @@ import java.util.List;
 public class BalanceService {
     private final BalanceRepository balanceRepository;
 
-    public List<Balance> findByUsers(Users users) {
-        return balanceRepository.findByUsers(users);
-    }
-
     public void saveBalance(MessageDTO messageDTO, Market market, Users user){
         Balance balance = balanceRepository.findByUsersAndMarket(user, market);
         if (balance == null){

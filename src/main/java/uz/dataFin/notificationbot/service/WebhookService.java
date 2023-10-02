@@ -31,12 +31,6 @@ public class WebhookService {
                     state = BotState.GET_START_DATEV2;
                 }else if (containsOnlyNumbers(text)){
                     state = BotState.GET_PRODUCT;
-                } else if (state == BotState.ALREADY_REGISTERED) {
-                    state = BotState.GET_CONTACT;
-                } else if (state == BotState.GET_CONTACT) {
-                    state = BotState.GUIDE;
-                }else if (state == BotState.GET_BALANCE) {
-                    state = BotState.TAKE_BALANCE;
                 }
             } else if (message.hasContact()) {
                 state = BotState.GET_CONTACT;
@@ -97,7 +91,6 @@ public class WebhookService {
 
         switch (state) {
             case SEND_PHONE, GET_CONTACT -> botService.getMainMenuSend(state, update);
-            case GUIDE -> botService.saveContact(update.getMessage().getChatId().toString(), update);
             case GET_PRODUCT -> botService.Employee(update);
             case GET_NAME -> botService.sendName(update);
             case SAVE_NAME -> botService.saveName(update);
@@ -138,7 +131,4 @@ public class WebhookService {
         }
         return true;
     }
-
-
-
 }
