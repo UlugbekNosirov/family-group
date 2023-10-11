@@ -22,6 +22,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class FileService {
     private final FileRepository fileRepository;
+    private final UtilService utilService;
 
     public void saveStartDate(String userId, String startDate) {
         DateDTO dateDTO = fileRepository.getDateDTOByClientId(userId);
@@ -65,7 +66,7 @@ public class FileService {
                     .build()
                     .exchange(Constant.REQUEST_URI +"/bot/reports", HttpMethod.POST, entity, byte[].class);
             Path path= Paths.get("REPORTS");
-            path=checkPackage(path);
+            path=utilService.checkPackage(path);
             Files.write(Paths.get(path.toFile().getAbsolutePath()+"/report."+dateDTO.getTypeFile()), Objects.requireNonNull(response.getBody()));
             return new File(path.toFile().getAbsolutePath()+"/report."+dateDTO.getTypeFile());
         }catch (Exception e){
@@ -74,11 +75,6 @@ public class FileService {
         return null;
     }
 
-    private Path checkPackage(Path file) {
-        if (!file.toFile().exists())
-            file.toFile().mkdirs();
-        return file;
-    }
 
     public void saveReportId(String chatId, int i) {
         DateDTO dateDTO = fileRepository.getDateDTOByClientId(chatId);

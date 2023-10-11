@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Month;
 
@@ -53,6 +54,12 @@ public class UtilService {
             System.out.println("chatId ni olishda xatolik");
         }
         return new Message();
+    }
+
+    Path checkPackage(Path file) {
+        if (!file.toFile().exists())
+            file.toFile().mkdirs();
+        return file;
     }
     public LocalDate setDate(Update update) {
         String inlineDate = update.getCallbackQuery().getData();

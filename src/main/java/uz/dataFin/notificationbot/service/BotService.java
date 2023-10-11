@@ -35,6 +35,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -337,6 +339,7 @@ public class BotService {
             DateDTO dateDTO = fileService.getDateDto(chatId);
             File reports = fileService.getReports(dateDTO);
             PDF2IMAGE(reports.getAbsolutePath(), update);
+            fileService.saveTypeFile(chatId, "jpg");
         } catch (Exception e) {
             sendClient404Error(update);
         }
@@ -377,10 +380,11 @@ public class BotService {
     public void PDF2IMAGE(String filePath, Update update) throws IOException {
         PdfDocument pdf = new PdfDocument();
         pdf.loadFromFile(filePath);
-
         for (int i = 0; i < pdf.getPages().getCount(); i++) {
             BufferedImage image = pdf.saveAsImage(i, PdfImageType.Bitmap,500,500);
-            File file = new File("C:\\Users\\User\\Desktop\\TEMP Ulugbek\\BOT\\file" + "/" + String.format(("report-%d.png"), i));
+            Path path= Paths.get("IMAGE");
+            path=utilService.checkPackage(path);
+            File file = new File(path.toFile().getAbsolutePath() + "/" + String.format(("report-%d.png"), i));
             ImageIO.write(image, "PNG", file);
             sendPhoto(update, file);
         }
