@@ -7,6 +7,7 @@ import uz.dataFin.notificationbot.model.Market;
 import uz.dataFin.notificationbot.repository.MarketRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +19,8 @@ public class MarketService {
     }
 
     public Market getMarket(Long marketId) {
-        return marketRepository.findById(marketId).get();
+        Optional<Market> marketOptional = marketRepository.findById(marketId);
+        return marketOptional.orElseGet(Market::new);
     }
 
     public Market getMarketByUserName(String userName) {

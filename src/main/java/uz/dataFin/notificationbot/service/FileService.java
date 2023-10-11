@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -23,31 +23,32 @@ import java.util.Objects;
 public class FileService {
     private final FileRepository fileRepository;
 
-    public void saveEndDate(Long userId, String endDate) {
-        DateDTO dto = fileRepository.getDateDTOByClientId(userId.toString());
-        if (Objects.nonNull(dto)){
-            dto.setEndDate(endDate);
-            fileRepository.save(dto);
-        }
-    }
-    public void saveStartDate(Long userId, String startDate) {
-        DateDTO dateDTO = fileRepository.getDateDTOByClientId(userId.toString());
+    public void saveStartDate(String userId, String startDate) {
+        DateDTO dateDTO = fileRepository.getDateDTOByClientId(userId);
         if (Objects.nonNull(dateDTO)){
             dateDTO.setStartDate(startDate);
             fileRepository.save(dateDTO);
         }
     }
 
-    public void saveTypeFile(Long userId, String typeFile) {
-        DateDTO dateDTO = fileRepository.getDateDTOByClientId(userId.toString());
+    public void saveEndDate(String userId, String endDate) {
+        DateDTO dto = fileRepository.getDateDTOByClientId(userId);
+        if (Objects.nonNull(dto)){
+            dto.setEndDate(endDate);
+            fileRepository.save(dto);
+        }
+    }
+
+    public void saveTypeFile(String userId, String typeFile) {
+        DateDTO dateDTO = fileRepository.getDateDTOByClientId(userId);
         if (Objects.nonNull(dateDTO)){
             dateDTO.setTypeFile(typeFile);
             fileRepository.save(dateDTO);
         }
     }
 
-    public DateDTO getDateDto(Long clientId){
-        return fileRepository.getDateDTOByClientId(clientId.toString());
+    public DateDTO getDateDto(String clientId){
+        return fileRepository.getDateDTOByClientId(clientId);
     }
 
     public File getReports(DateDTO dateDTO) {
@@ -55,7 +56,7 @@ public class FileService {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setBasicAuth("Админстратор", "2275157", StandardCharsets.UTF_8);
-            headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             HttpEntity<DateDTO> entity = new HttpEntity<>(dateDTO, headers);
 
             ResponseEntity<byte[]> response = restTemplate
@@ -79,8 +80,8 @@ public class FileService {
         return file;
     }
 
-    public void saveReportId(Long chatId, int i) {
-        DateDTO dateDTO = fileRepository.getDateDTOByClientId(chatId.toString());
+    public void saveReportId(String chatId, int i) {
+        DateDTO dateDTO = fileRepository.getDateDTOByClientId(chatId);
         if (Objects.nonNull(dateDTO)){
             dateDTO.setReportId(i);
             dateDTO.setMethodType("REPORT");
@@ -88,16 +89,16 @@ public class FileService {
         }
     }
 
-    public void saveMethodType(Long chatId, String methodType) {
-        DateDTO dateDTO = fileRepository.getDateDTOByClientId(chatId.toString());
+    public void saveMethodType(String chatId, String methodType) {
+        DateDTO dateDTO = fileRepository.getDateDTOByClientId(chatId);
         if (Objects.nonNull(dateDTO)){
             dateDTO.setMethodType(methodType);
             fileRepository.save(dateDTO);
         }
     }
 
-    public void saveCode(Long chatId, String code) {
-        DateDTO dateDTO = fileRepository.getDateDTOByClientId(chatId.toString());
+    public void saveCode(String chatId, String code) {
+        DateDTO dateDTO = fileRepository.getDateDTOByClientId(chatId);
         if (Objects.nonNull(dateDTO)){
             dateDTO.setCode(code);
             fileRepository.save(dateDTO);

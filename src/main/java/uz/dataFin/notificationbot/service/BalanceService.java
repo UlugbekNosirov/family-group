@@ -8,8 +8,6 @@ import uz.dataFin.notificationbot.model.MessageDTO;
 import uz.dataFin.notificationbot.model.Users;
 import uz.dataFin.notificationbot.repository.BalanceRepository;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class BalanceService {

@@ -1,9 +1,13 @@
 package uz.dataFin.notificationbot.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import uz.dataFin.notificationbot.model.Client;
 import uz.dataFin.notificationbot.model.DateDTO;
 import uz.dataFin.notificationbot.model.Market;
 import uz.dataFin.notificationbot.model.Users;
@@ -12,7 +16,10 @@ import uz.dataFin.notificationbot.repository.FileRepository;
 import uz.dataFin.notificationbot.repository.MarketRepository;
 import uz.dataFin.notificationbot.repository.UserRepository;
 import uz.dataFin.notificationbot.utils.BotState;
+import uz.dataFin.notificationbot.utils.Constant;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -24,59 +31,88 @@ public class UserService {
     private final MarketRepository marketRepository;
     public final MarketService marketService;
     private final FileRepository fileRepository;
-    private final static String words ="abdefghijklmnopqrstuvxyzwcйцукенгшўзхъфқвапролджэячсмитьбюёҳғыщ1234567890.,/*-+_:!?@#$%^&()'\"[]{}|<>'\'№~` ";
+    private final UtilService utilService;
 
     public UserDTO checkAndGet(Update update) {
-        Message message = update.hasMessage() ? update.getMessage() : update.hasCallbackQuery() ? update.getCallbackQuery().getMessage() : null;
-        if (message == null) return null;
-        Optional<Users> optionalUser = userRepository.findByChatId(message.getChatId().toString());
-        Optional<DateDTO> dateDTO = fileRepository.findDateDTOByClientId(message.getChatId().toString());
-        if (optionalUser.isPresent() && dateDTO.isPresent() && optionalUser.get().getPhone() != null)
+        String chatId = utilService.getChatIdFromUpdate(update);
+        Optional<Users> optionalUser = userRepository.findByChatId(chatId);
+        Optional<DateDTO> dateDTO = fileRepository.findDateDTOByClientId(chatId);
+        if (optionalUser.isPresent() && dateDTO.isPresent() && optionalUser.get().getPhone() != null) {
+            getRoleInURL(chatId);
             return new UserDTO(optionalUser.get().getState());
-        else {
+        }else {
             if (dateDTO.isEmpty()) {
                 LocalDate currentDate = LocalDate.now();
                 currentDate.getMonth();
                 LocalDate lastDayOfMonthDate = currentDate.withDayOfMonth(
                         currentDate.getMonth().length(currentDate.isLeapYear()));
-                DateDTO DTO = new DateDTO(update.getMessage().getFrom().getFirstName(), update.getMessage().getChatId().toString(), 1, "REPORT", LocalDate.now().toString(), lastDayOfMonthDate.toString(), "", "xlsx");
+                DateDTO DTO = new DateDTO(update.getMessage().getFrom().getFirstName(), update.getMessage().getChatId().toString(), 1, "REPORT", LocalDate.now().toString(), lastDayOfMonthDate.toString(), "");
                 fileRepository.save(DTO);
             }
             if (optionalUser.isEmpty()) {
-                saveChosenMarket(message, 1, update.getMessage().getChatId().toString());
+                saveChosenMarket(update, 1);
             }
         }
-        return new UserDTO(BotState.SEND_PHONE);
+        return new UserDTO(optionalUser.get().getState());
     }
 
-    public void saveChosenMarket(Message message, Integer data, String chatId) {
-        var from = message.getFrom();
-        userRepository.save(new Users(message.getChatId().toString(), from.getFirstName(),
-                from.getLastName(), from.getUserName(), BotState.SEND_PHONE));
+
+    public String getRoleInURL(String chatId){
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth("Админстратор", "2275157", StandardCharsets.UTF_8);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            Client client = new Client();
+            client.setClientID(chatId);
+            HttpEntity<Client> entity = new HttpEntity<>(client, headers);
+
+            ResponseEntity<byte[]> response = restTemplate
+                    .setConnectTimeout(Duration.ofSeconds(15))
+                    .setReadTimeout(Duration.ofSeconds(60))
+                    .build()
+                    .exchange(Constant.REQUEST_URI + "/bot/check", HttpMethod.POST, entity, byte[].class);
+            byte[] responseBody = response.getBody();
+            if (responseBody != null) {
+                String text = new String(responseBody, StandardCharsets.UTF_8);
+                saveRole(chatId, text);
+                return text;
+            }
+        }catch (Exception e){
+            System.out.println("Role aniqlashda xatolik yuz berdi! userService.getRoleINURL");
+        }
+        return "Nobody";
+    }
+
+    public void saveChosenMarket(Update update, Integer data) {
+        String chatId = utilService.getChatIdFromUpdate(update);
+        Message message = (update.hasMessage())?update.getMessage(): update.getCallbackQuery().getMessage();
+        String role = getRoleInURL(chatId);
+        userRepository.save(new Users(message.getChatId().toString(), message.getFrom().getFirstName(),
+                message.getFrom().getLastName(), message.getFrom().getUserName(), role));
         Market market = marketService.getMarket(new Long(data));
-        Users user = userRepository.findByChatId(chatId).get();
-        List<Market> marketList = user.getMarketList();
-        Long userMarketId = marketRepository.getUserMarketId(user.getId(), market.getId());
-        if (userMarketId==null) {
-            marketList.add(market);
-            user.setMarketList(marketList);
-            userRepository.save(user);
-        }
-    }
-
-    public static boolean containsSpecialCharacters(String text) {
-        String lowerCase = text.toLowerCase();
-        for (char c : lowerCase.toCharArray()) {
-            if (words.indexOf(c) == -1) {
-                return false;
+        Optional<Users> usersOptional = userRepository.findByChatId(chatId);
+        if (usersOptional.isPresent()){
+            Users user = usersOptional.get();
+            List<Market> marketList = user.getMarketList();
+            Long userMarketId = marketRepository.getUserMarketId(user.getId(), market.getId());
+            if (userMarketId==null) {
+                marketList.add(market);
+                user.setMarketList(marketList);
+                userRepository.save(user);
             }
         }
-        return true;
     }
 
-    public String getRole(Long chatId){
-        Optional<Users> roleByChatId = userRepository.findRoleByChatId(chatId.toString());
-        return roleByChatId.map(Users::getRole).orElse(null);
+
+
+    public String getRole(String chatId){
+        Optional<Users> roleByChatId = userRepository.findRoleByChatId(chatId);
+        if (roleByChatId.isPresent()){
+            return roleByChatId.get().getRole();
+        }
+        saveRole(chatId, "Nobody");
+        return "Nobody";
     }
 
     public void saveRole(String chatId, String role) {
@@ -97,12 +133,14 @@ public class UserService {
         }
     }
 
+
     public Users getByChatId(String chatId) {
         return userRepository.findByChatId(chatId).orElse(null);
     }
 
     public Boolean getPhone(Update update){
-        Optional<Users> optionalUser = userRepository.findByChatId(update.getMessage().getChatId().toString());
+        String chatId = utilService.getChatIdFromUpdate(update);
+        Optional<Users> optionalUser = userRepository.findByChatId(chatId);
         if (optionalUser.isPresent()){
             String phone = optionalUser.get().getPhone();
             return phone != null;
@@ -110,32 +148,30 @@ public class UserService {
         return false;
     }
 
-    public BotState getState(Update update){
-        Optional<Users> optionalUser = userRepository.findByChatId(update.getMessage().getChatId().toString());
-        if (optionalUser.isPresent()){
-            BotState state = optionalUser.get().getState();
-            return state;
+    public void updateUserState(Update update,BotState state, String contact){
+        String chatId = utilService.getChatIdFromUpdate(update);
+        Optional<Users> user = userRepository.findByChatId(chatId);
+        if (user.isPresent()) {
+            user.get().setState(state);
+            user.get().setPhone(contact);
+            userRepository.save(user.get());
         }
-        return null;
-    }
-
-    public void updateUserState(String chatId,BotState state, String contact){
-        Users user = userRepository.findByChatId(chatId).get();
-        user.setState(state);
-        user.setPhone(contact);
-        userRepository.save(user);
     }
 
     public void saveUserName(Update update) {
-        Optional<Users> user = userRepository.findByChatId(update.getMessage().getChatId().toString());
+        String chatId = utilService.getChatIdFromUpdate(update);
+        Optional<Users> user = userRepository.findByChatId(chatId);
         if (user.isPresent()){
             user.get().setFirstname(update.getMessage().getText());
-            user.get().setState(BotState.SEND_PHONE);
+            userRepository.save(user.get());
         }
     }
 
     public String getName(Update update) {
-        Optional<Users> user = userRepository.findByChatId(update.getMessage().getChatId().toString());
-        return user.get().getFirstname();
+        String chatId = utilService.getChatIdFromUpdate(update);
+        Optional<Users> user = userRepository.findByChatId(chatId);
+        if (user.isPresent())
+            return user.get().getFirstname();
+        return update.getMessage().getFrom().getFirstName();
     }
 }

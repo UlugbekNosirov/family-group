@@ -24,14 +24,15 @@ public class Keyboard {
 
     private final MarketService marketService;
     private final ProductService productService;
-    private final String months[]={"Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktyabr", "Noyabr", "Dekabr"};
+    private final String months[] = {"Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktyabr", "Noyabr", "Dekabr"};
+
     public InlineKeyboardMarkup createInlineMarkupForMarkets() {
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         List<InlineKeyboardButton> row = new ArrayList<>();
 
-        List<Market> markets =  marketService.findAll();
-        for (int i = 1; i < markets.size()+1; i++) {
-            Market mar = markets.get(i-1);
+        List<Market> markets = marketService.findAll();
+        for (int i = 1; i < markets.size() + 1; i++) {
+            Market mar = markets.get(i - 1);
             InlineKeyboardButton btn = new InlineKeyboardButton(mar.getName());
             btn.setCallbackData(mar.getId().toString());
             row.add(btn);
@@ -45,15 +46,36 @@ public class Keyboard {
         return new InlineKeyboardMarkup(rowList);
     }
 
+    public InlineKeyboardMarkup typeFileButtons() {
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+        List<InlineKeyboardButton> row = new ArrayList<>();
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        InlineKeyboardButton btn1 = new InlineKeyboardButton();
+        btn1.setText("Rasm");
+        btn1.setCallbackData("jpg");
+        InlineKeyboardButton btn2 = new InlineKeyboardButton();
+        btn2.setText("Excel");
+        btn2.setCallbackData("xlsx");
+        InlineKeyboardButton btn3 = new InlineKeyboardButton();
+        btn3.setText("Pdf");
+        btn3.setCallbackData("pdf");
+        row.add(btn1);
+        row.add(btn2);
+        row2.add(btn3);
+        rowList.add(row);
+        rowList.add(row2);
+        return new InlineKeyboardMarkup(rowList);
+    }
+
     public ReplyKeyboardMarkup createContactMarkup() {
         KeyboardButton contactBtn = new KeyboardButton(Constant.MY_PHONE_NUMBER);
         contactBtn.setRequestContact(true);
-      return   new ReplyKeyboardMarkup(List.of(new KeyboardRow(List.of(contactBtn))), true, false, true,"next");
+        return new ReplyKeyboardMarkup(List.of(new KeyboardRow(List.of(contactBtn))), true, false, true, "next");
     }
 
     public ReplyKeyboardMarkup startBtn() {
         KeyboardButton contactBtn = new KeyboardButton("/start");
-        return   new ReplyKeyboardMarkup(List.of(new KeyboardRow(List.of(contactBtn))), true, false, true,"next");
+        return new ReplyKeyboardMarkup(List.of(new KeyboardRow(List.of(contactBtn))), true, false, true, "next");
     }
 
     public ReplyKeyboardMarkup panelBtns() {
@@ -64,10 +86,11 @@ public class Keyboard {
         markup.setOneTimeKeyboard(false);
         markup.setResizeKeyboard(true);
         markup.setSelective(true);
-        row.add(new KeyboardButton("АКТ СВEРКА"));
-        row.add(new KeyboardButton("БАЛАНС"));
-//        row2.add(new KeyboardButton("БАЛАНС"));
+        row.add(new KeyboardButton("\uD83D\uDCC5АКТ СВEРКА"));
+        row.add(new KeyboardButton("\uD83D\uDCC5АКТ СВEРКА (товар)"));
+        row2.add(new KeyboardButton("\uD83D\uDCB0БАЛАНС"));
         rowList.add(row);
+        rowList.add(row2);
         markup.setKeyboard(rowList);
         return markup;
     }
@@ -82,15 +105,15 @@ public class Keyboard {
         markup.setOneTimeKeyboard(false);
         markup.setResizeKeyboard(true);
         markup.setSelective(true);
-        row1.add(new KeyboardButton("БАЛАНС"));
-        for (int i = 1; i < all.size()+1; i++) {
-            if (i==5){
+        row1.add(new KeyboardButton("\uD83D\uDCB0БАЛАНС"));
+        for (int i = 1; i < all.size() + 1; i++) {
+            if (i == 5) {
                 break;
             }
             Products products = all.get(i - 1);
-            if (i%2==0) {
+            if (i % 2 == 0) {
                 row.add(new KeyboardButton(products.getCode()));
-            }else{
+            } else {
                 row2.add(new KeyboardButton(products.getCode()));
             }
         }
@@ -133,7 +156,7 @@ public class Keyboard {
         rowsInline.add(rowInline);
 
         rowInline = new ArrayList<>();
-        rowInline.add(button(this.months[inlineMonth-1], this.months[inlineMonth-1]));
+        rowInline.add(button(this.months[inlineMonth - 1], this.months[inlineMonth - 1]));
 
         rowsInline.add(rowInline);
 
@@ -158,7 +181,7 @@ public class Keyboard {
 
                     if (isEnd == 1) {
                         if (i != dayOfWeek) {
-                            rowInline.add(button(" ", "calendarNoneB"+i));
+                            rowInline.add(button(" ", "calendarNoneB" + i));
                         } else {
                             rowInline.add(
                                     button("" + day + "", "" + inlineYear
@@ -169,10 +192,10 @@ public class Keyboard {
                         }
                     } else {
                         if (day > daysOfMonth) {
-                            rowInline.add(button(" ", "calendarNoneE"+i));
+                            rowInline.add(button(" ", "calendarNoneE" + i));
                             isEnd = 0;
                         } else {
-                            rowInline.add(button(""+day+"", "" + inlineYear
+                            rowInline.add(button("" + day + "", "" + inlineYear
                                     + "-" + (inlineMonth < 10 ? "0" + inlineMonth : inlineMonth)
                                     + "-" + (day < 10 ? "0" + day : day) + ""));
                             day += 1;
@@ -189,16 +212,17 @@ public class Keyboard {
         return markupInline;
     }
 
-    public Integer countDaysOfMonth(Integer year, Integer month){
-        YearMonth yearMonth=YearMonth.of(year, month);
+    public Integer countDaysOfMonth(Integer year, Integer month) {
+        YearMonth yearMonth = YearMonth.of(year, month);
         return yearMonth.lengthOfMonth();
     }
-    public Integer checkDayOfWeek(Integer year, Integer month){
-        Date date=new Date(year-1900, month-1, 0);
+
+    public Integer checkDayOfWeek(Integer year, Integer month) {
+        Date date = new Date(year - 1900, month - 1, 0);
         return date.getDay();
     }
 
-    public InlineKeyboardButton button(String text, String callBackDate){
+    public InlineKeyboardButton button(String text, String callBackDate) {
         InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
         inlineKeyboardButton.setCallbackData(callBackDate);
         inlineKeyboardButton.setText(text);
