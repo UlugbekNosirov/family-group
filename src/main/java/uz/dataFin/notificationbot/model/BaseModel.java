@@ -23,7 +23,6 @@ public abstract class BaseModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    private String name;
     @CreatedDate
     @CreationTimestamp
     @Column(columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")

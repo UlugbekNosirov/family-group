@@ -5,6 +5,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import uz.dataFin.notificationbot.model.DateDTO;
+import uz.dataFin.notificationbot.model.SalesReceipt;
 import uz.dataFin.notificationbot.repository.FileRepository;
 import uz.dataFin.notificationbot.utils.Constant;
 
@@ -23,6 +24,7 @@ import java.util.Objects;
 public class FileService {
     private final FileRepository fileRepository;
     private final UtilService utilService;
+    private final SalesReceiptService salesReceiptService;
 
     public void saveStartDate(String userId, String startDate) {
         DateDTO dateDTO = fileRepository.getDateDTOByClientId(userId);
@@ -65,6 +67,7 @@ public class FileService {
                     .setReadTimeout(Duration.ofSeconds(60))
                     .build()
                     .exchange(Constant.REQUEST_URI +"/bot/reports", HttpMethod.POST, entity, byte[].class);
+            byte[] responseBody = response.getBody();
             Path path= Paths.get("REPORTS");
             path=utilService.checkPackage(path);
             Files.write(Paths.get(path.toFile().getAbsolutePath()+"/report."+dateDTO.getTypeFile()), Objects.requireNonNull(response.getBody()));
@@ -74,6 +77,34 @@ public class FileService {
         }
         return null;
     }
+
+
+     public File getCheque(SalesReceipt salesReceipt) {
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth("Админстратор", "2275157", StandardCharsets.UTF_8);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            HttpEntity<SalesReceipt> entity = new HttpEntity<>(salesReceipt, headers);
+
+            ResponseEntity<byte[]> response = restTemplate
+                    .setConnectTimeout(Duration.ofSeconds(60))
+                    .setReadTimeout(Duration.ofSeconds(60))
+                    .build()
+                    .exchange(Constant.REQUEST_URI +"/bot/reports", HttpMethod.POST, entity, byte[].class);
+            Path path= Paths.get("REPORTS");
+            path=utilService.checkPackage(path);
+            Files.write(Paths.get(path.toFile().getAbsolutePath()+"/report.pdf"), Objects.requireNonNull(response.getBody()));
+            salesReceiptService.changeToActive(salesReceipt);
+            return new File(path.toFile().getAbsolutePath()+"/report.pdf");
+        }catch (Exception e){
+            System.out.println(LocalDate.now()+" "+", "+", Cheque qabul qilib olishda xatolik, fileService.getReports");
+        }
+        return null;
+    }
+
+
+
 
 
     public void saveReportId(String chatId, int i) {

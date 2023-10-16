@@ -37,8 +37,8 @@ public class UserService {
         String chatId = utilService.getChatIdFromUpdate(update);
         Optional<Users> optionalUser = userRepository.findByChatId(chatId);
         Optional<DateDTO> dateDTO = fileRepository.findDateDTOByClientId(chatId);
+        getRoleInURL(chatId);
         if (optionalUser.isPresent() && dateDTO.isPresent() && optionalUser.get().getPhone() != null) {
-            getRoleInURL(chatId);
             return new UserDTO(optionalUser.get().getState());
         }else {
             if (dateDTO.isEmpty()) {

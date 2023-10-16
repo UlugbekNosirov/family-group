@@ -47,13 +47,12 @@ public class WebhookService {
                 state = BotState.SEND_EXCEPTION;
             }else {
                 String callbackData = update.getCallbackQuery().getData();
-                if (callbackData.equals("pdf")){
-                    state = BotState.EDIT2PDF;
-                } else if (callbackData.equals("jpg")) {
-                    state = BotState.EDIT2JPG;
-                } else if (callbackData.equals("xlsx")) {
-                    state = BotState.EDIT2XLSX;
-                }
+                state = switch (callbackData) {
+                    case "pdf" -> BotState.EDIT2PDF;
+                    case "jpg" -> BotState.EDIT2JPG;
+                    case "xlsx" -> BotState.EDIT2XLSX;
+                    default -> state;
+                };
                 switch (state) {
                     case GET_START_DATE, GET_START_DATEV2 -> {
                         if (!utilService.checkBADate(callbackData) && !utilService.getMonth(update)) {
@@ -112,7 +111,5 @@ public class WebhookService {
         }
         if (state!=BotState.SAVE_NAME)
             botService.saveData(update, new UserDTO(state));
-        else
-            botService.saveData(update, new UserDTO(BotState.SEND_PHONE));
     }
 }

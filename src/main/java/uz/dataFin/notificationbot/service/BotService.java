@@ -12,6 +12,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
@@ -21,10 +22,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import uz.dataFin.notificationbot.feign.TelegramFeign;
 import uz.dataFin.notificationbot.helper.Keyboard;
-import uz.dataFin.notificationbot.model.DateDTO;
-import uz.dataFin.notificationbot.model.Market;
-import uz.dataFin.notificationbot.model.MessageDTO;
-import uz.dataFin.notificationbot.model.Users;
+import uz.dataFin.notificationbot.model.*;
 import uz.dataFin.notificationbot.payload.UserDTO;
 import uz.dataFin.notificationbot.utils.BotState;
 import uz.dataFin.notificationbot.utils.Constant;
@@ -35,12 +33,17 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -53,10 +56,12 @@ public class BotService {
     public final ProductService productService;
     private final Keyboard keyboard;
     private final UtilService utilService;
+    private final SalesReceiptService salesReceiptService;
 
 
     public BotState getAndCheck(Update update) {
         UserDTO userDTO = userService.checkAndGet(update);
+        sendFileToUser();
         return userDTO.getState();
     }
 
@@ -165,7 +170,7 @@ public class BotService {
         }
     }
 
-    public void sendMessageToUser(MessageDTO messageDTO, String username) {
+    public void sendMessageToUser(MessageDTO messageDTO, String username)  {
         Users user = userService.getByChatId(messageDTO.getChatId());
         Market market = marketService.getMarketByUserName(username);
         balanceService.saveBalance(messageDTO, market, user);
@@ -173,6 +178,19 @@ public class BotService {
         sendMessage.setChatId(messageDTO.getChatId());
         sendMessage.setText("\uD83C\uDFEA " + market.getName() + "\n" + messageDTO.getText());
         feign.sendMessage(sendMessage);
+        if (Objects.nonNull(messageDTO.getUrl())){
+            salesReceiptService.saveUrlById(messageDTO);
+        }
+    }
+
+    public void sendFileToUser() {
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> {
+            List<SalesReceipt> nonActiveUsers = salesReceiptService.getNonActiveUsers();
+            for (SalesReceipt salesReceipt : nonActiveUsers) {
+                sendCheque(salesReceipt);
+            }
+        }, 0, 1, TimeUnit.MINUTES);
     }
 
     public void getBalance(Update update) {
@@ -301,8 +319,20 @@ public class BotService {
         }
     }
 
+    public void sendCheque(SalesReceipt salesReceipt) {
+
+        File reports = fileService.getCheque(salesReceipt);
+            try {
+                PDF2IMAGEinCheque(reports.getAbsolutePath(), salesReceipt);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+
+    }
+
     public void sendReport(Update update) {
-        try {
+            try {
             String chatId = utilService.getChatIdFromUpdate(update);
             String uri = "https://api.telegram.org/bot" + Security.BOT_TOKEN + "/sendDocument";
             HttpPost httppost = new HttpPost(uri);
@@ -330,7 +360,7 @@ public class BotService {
             } catch(Exception e){
                 sendClient404Error(update);
             }
-        }
+    }
 
     public void sendReportAsImage(Update update) {
         try {
@@ -376,6 +406,37 @@ public class BotService {
         }
     }
 
+    public void sendChequeAsPhoto(SalesReceipt salesReceipt, File file) {
+        try {
+            String chatId = salesReceipt.getClientId();
+            String uri = "https://api.telegram.org/bot" + Security.BOT_TOKEN + "/sendPhoto";
+            HttpPost httppost = new HttpPost(uri);
+
+            File photoFile = new File(file.getAbsolutePath());
+
+            if (!photoFile.exists() || !photoFile.canRead()) {
+                throw new RuntimeException("Photo file does not exist or is not readable");
+            }
+
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            builder.addTextBody("chat_id", chatId);
+
+            builder.addBinaryBody("photo", photoFile, ContentType.APPLICATION_OCTET_STREAM, photoFile.getName());
+
+            org.apache.http.HttpEntity multipart = builder.build();
+            httppost.setEntity(multipart);
+
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            try {
+                httpClient.execute(httppost);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (Exception e) {
+            System.out.println(e+"Xatolik botService().SendCheque");
+        }
+    }
+
 
     public void PDF2IMAGE(String filePath, Update update) throws IOException {
         PdfDocument pdf = new PdfDocument();
@@ -387,6 +448,20 @@ public class BotService {
             File file = new File(path.toFile().getAbsolutePath() + "/" + String.format(("report-%d.png"), i));
             ImageIO.write(image, "PNG", file);
             sendPhoto(update, file);
+        }
+        pdf.close();
+    }
+
+    public void PDF2IMAGEinCheque(String filePath, SalesReceipt salesReceipt) throws IOException {
+        PdfDocument pdf = new PdfDocument();
+        pdf.loadFromFile(filePath);
+        for (int i = 0; i < pdf.getPages().getCount(); i++) {
+            BufferedImage image = pdf.saveAsImage(i, PdfImageType.Bitmap,500,500);
+            Path path= Paths.get("CHEQUE");
+            path=utilService.checkPackage(path);
+            File file = new File(path.toFile().getAbsolutePath() + "/" + String.format(("cheque-%d.png"), i));
+            ImageIO.write(image, "PNG", file);
+            sendChequeAsPhoto(salesReceipt, file);
         }
         pdf.close();
     }

@@ -2,11 +2,15 @@ package uz.dataFin.notificationbot.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import uz.dataFin.notificationbot.model.MessageDTO;
 import uz.dataFin.notificationbot.model.Users;
 import uz.dataFin.notificationbot.repository.MarketRepository;
 import uz.dataFin.notificationbot.repository.UserRepository;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,8 +29,8 @@ public class ApiService {
         return usersList;
     }
 
-    public void sendMessageToUser(MessageDTO messageDTO, String username) {
-        botService.sendMessageToUser(messageDTO,username);
+    public void sendMessageToUser(MessageDTO messageDTO, String username)  {
+        botService.sendMessageToUser(messageDTO, username);
     }
 
 }
