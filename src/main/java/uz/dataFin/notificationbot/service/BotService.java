@@ -483,7 +483,7 @@ public class BotService {
 
     public void sendAllDate(Update update){
         try {
-            Long chatId = Long.valueOf("1148134936");
+            Long chatId;
             Integer messageId;
             if (update.hasCallbackQuery()) {
                 chatId = update.getCallbackQuery().getMessage().getChatId();
