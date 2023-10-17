@@ -25,14 +25,14 @@ public class WebhookService {
                     state = BotState.SEND_PHONE;
                 }else if (text.equals("/settings")){
                     state = BotState.SEND_BTN_TYPE_FILE;
-                }else if (state == BotState.SEND_PHONE){
-                    state = BotState.SAVE_NAME;
                 }else if (text.equals("\uD83D\uDCB0БАЛАНС")) {
                     state = BotState.GET_BALANCE;
                 } else if (text.equals("\uD83D\uDCC5АКТ СВEРКА (товар)")) {
                     state = BotState.GET_START_DATE;
                 } else if (text.equals("\uD83D\uDCC5АКТ СВEРКА")) {
                     state = BotState.GET_START_DATEV2;
+                }else if (state == BotState.SEND_PHONE){
+                    state = BotState.SAVE_NAME;
                 }else if (UtilService.containsOnlyNumbers(text)){
                     state = BotState.GET_PRODUCT;
                 }
@@ -104,7 +104,7 @@ public class WebhookService {
             case REPORTS, SEND_BY_MONTH -> botService.getReport(state, update);
             case SAVE_START_DATE-> botService.saveStartDate(update);
             case SEND_EXCEPTION-> botService.sendError(update);
-            case TAKE_BALANCE, GET_BALANCE-> botService.getBalance(update);
+            case GET_BALANCE-> botService.getBalance(update);
             case EDIT_START_DATE, EDIT_END_DATE-> botService.editDate(update);
             case SEND_BTN_TYPE_FILE-> botService.sendTypeFile(update);
             case EDIT2XLSX, EDIT2JPG, EDIT2PDF-> botService.editTypeFile(state, update);

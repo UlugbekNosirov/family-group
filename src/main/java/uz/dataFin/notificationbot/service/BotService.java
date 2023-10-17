@@ -3,7 +3,6 @@ package uz.dataFin.notificationbot.service;
 import com.spire.pdf.PdfDocument;
 import com.spire.pdf.graphics.PdfImageType;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.codec.net.QuotedPrintableCodec;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -12,8 +11,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -33,7 +30,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -75,7 +71,7 @@ public class BotService {
         String chatId = utilService.getChatIdFromUpdate(update);
         sendMessage.setChatId(chatId);
         String name = userService.getName(update);
-        if (!UtilService.containsSpecialCharacters(name)) {
+        if (UtilService.containsSpecialCharacters(name)) {
             sendName(update);
         }else if (!getPhone(update)) {
             sendMessage.setText("Aссалому алайкум " + name + "\n▪Рўйхатдан ўтиш учун телефон рақамингизни юборинг!");
@@ -529,37 +525,31 @@ public class BotService {
         String chatId = utilService.getChatIdFromUpdate(update);
         Message message = utilService.getMessageFromUpdate(update);
         sendMessage.setChatId(chatId);
-        if (!UtilService.containsSpecialCharacters(name)) {
+        if (UtilService.containsSpecialCharacters(name)) {
             userService.saveUserName(update);
         }
         if (!getPhone(update)) {
             sendMessage.setText("Aссалому алайкум " + userService.getName(update) + "\n▪️Рўйхатдан ўтиш учун телефон рақамингизни юборинг!");
-            sendMessage.setReplyMarkup(keyboard.createContactMarkup());
             feign.sendMessage(sendMessage);
         }
         if (message.getText().equals("\uD83D\uDCC5АКТ СВEРКА")){
             sendStartDate(BotState.GET_START_DATEV2, update);
-            saveData(update, new UserDTO(BotState.GET_START_DATEV2));
             return;
         }
         if (message.getText().equals("\uD83D\uDCB0БАЛАНС")){
             getBalance(update);
-            saveData(update, new UserDTO(BotState.GET_BALANCE));
             return;
         }
         if (message.getText().equals("\uD83D\uDCC5АКТ СВEРКА (товар)")){
             sendStartDate(BotState.GET_START_DATE, update);
-            saveData(update, new UserDTO(BotState.GET_START_DATE));
             return;
         }
         if (message.getText().equals("/settings")){
             sendTypeFile(update);
-            saveData(update, new UserDTO(BotState.SEND_BTN_TYPE_FILE));
             return;
         }
         if (UtilService.containsOnlyNumbers(update.getMessage().getText())){
             Employee(update);
-            saveData(update, new UserDTO(BotState.GET_PRODUCT));
         }
     }
 

@@ -14,7 +14,7 @@ import java.time.Month;
 @RequiredArgsConstructor
 public class UtilService {
     private final static String words ="abdefghijklmnopqrstuvxyzwcйцукенгшўзхъфқвапролджэячсмитьбюёҳғыщ1234567890.,/*-+_:!?@#$%^&()'\"[]{}|<>'\'№~` ";
-    private final static String months[] = {"Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktyabr", "Noyabr", "Dekabr"};
+    private final static String[] months = {"Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktyabr", "Noyabr", "Dekabr"};
 
     public static LocalDate[] getFirstAndLastDayOfMonth(String monthName) {
         Month month = null;
@@ -63,52 +63,39 @@ public class UtilService {
     }
     public LocalDate setDate(Update update) {
         String inlineDate = update.getCallbackQuery().getData();
-        String inD[] = inlineDate.split("-");
+        String[] inD = inlineDate.split("-");
         int year = Integer.parseInt(inD[0]);
         int month = Integer.parseInt(inD[1]);
-        int day = 01;
+        int day = 1;
         return LocalDate.of(year, month, day);
     }
 
     public static Month convertToMonthEnum(String monthName) {
-        switch (monthName) {
-            case "Yanvar":
-                return Month.JANUARY;
-            case "Fevral":
-                return Month.FEBRUARY;
-            case "Mart":
-                return Month.MARCH;
-            case "Aprel":
-                return Month.APRIL;
-            case "May":
-                return Month.MAY;
-            case "Iyun":
-                return Month.JUNE;
-            case "Iyul":
-                return Month.JULY;
-            case "Avgust":
-                return Month.AUGUST;
-            case "Sentabr":
-                return Month.SEPTEMBER;
-            case "Oktyabr":
-                return Month.OCTOBER;
-            case "Noyabr":
-                return Month.NOVEMBER;
-            case "Dekabr":
-                return Month.DECEMBER;
-            default:
-                throw new IllegalArgumentException("Invalid month name: " + monthName);
-        }
+        return switch (monthName) {
+            case "Yanvar" -> Month.JANUARY;
+            case "Fevral" -> Month.FEBRUARY;
+            case "Mart" -> Month.MARCH;
+            case "Aprel" -> Month.APRIL;
+            case "May" -> Month.MAY;
+            case "Iyun" -> Month.JUNE;
+            case "Iyul" -> Month.JULY;
+            case "Avgust" -> Month.AUGUST;
+            case "Sentabr" -> Month.SEPTEMBER;
+            case "Oktyabr" -> Month.OCTOBER;
+            case "Noyabr" -> Month.NOVEMBER;
+            case "Dekabr" -> Month.DECEMBER;
+            default -> throw new IllegalArgumentException("Invalid month name: " + monthName);
+        };
     }
 
     public Boolean checkBADate(String inlineDate){
-        String inD[]=inlineDate.split("-");
+        String[] inD =inlineDate.split("-");
         return inD.length==2;
     }
 
     public boolean getMonth(Update update){
         String data = update.getCallbackQuery().getData();
-        String inD[]=data.split("-");
+        String[] inD =data.split("-");
         return inD.length==1;
     }
 
@@ -133,9 +120,9 @@ public class UtilService {
         String lowerCase = text.toLowerCase();
         for (char c : lowerCase.toCharArray()) {
             if (words.indexOf(c) == -1) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 }
