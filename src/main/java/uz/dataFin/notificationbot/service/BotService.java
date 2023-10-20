@@ -8,6 +8,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.tomcat.jni.Local;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -57,13 +58,13 @@ public class BotService {
 
     public BotState getAndCheck(Update update) {
         UserDTO userDTO = userService.checkAndGet(update);
-        sendFileToUser();
+//        sendFileToUser();
         return userDTO.getState();
     }
 
     public void saveData(Update update, UserDTO userDTO) {
-        Message message = update.hasMessage() ? update.getMessage() : update.getCallbackQuery().getMessage();
-        userService.saveData(message.getChatId().toString(), userDTO);
+        String chatId = utilService.getChatIdFromUpdate(update);
+        userService.saveData(chatId, userDTO);
     }
 
     public void getMainMenuSend(Update update) {
@@ -74,7 +75,7 @@ public class BotService {
         if (UtilService.containsSpecialCharacters(name)) {
             sendName(update);
         }else if (!getPhone(update)) {
-            sendMessage.setText("Aссалому алайкум " + name + "\n▪Рўйхатдан ўтиш учун телефон рақамингизни юборинг!");
+            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.REGISTRATION));
             sendMessage.setReplyMarkup(keyboard.createContactMarkup());
             feign.sendMessage(sendMessage);
         }else {
@@ -97,27 +98,22 @@ public class BotService {
         String role = userService.getRole(chatId);
         switch (role) {
             case "Employee" -> {
-                SendMessage sendMessage = new SendMessage(chatId, "Сиз ходимлар рўйхатига қўшилгансиз\n\nКеракли маҳсулот коди ёки шртих кодини киритинг!");
-                sendMessage.setReplyMarkup(keyboard.nullBtn(chatId));
+                SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.EMPLOYEE));
+                sendMessage.setReplyMarkup(keyboard.nullBtn(chatId, chatId));
                 feign.sendMessage(sendMessage);
             }
             case "Contractor" -> {
-                SendMessage sendMessage = new SendMessage(chatId, """
-                        Сиз контрагентлар рўйхатига қўшилгансиз!
-                        
-                        /settings -- файл форматини о`згартириш учун ушбу буйруқдан фойдаланинг!
-                        
-                        Қуйидаги буйруқлардан бирини танланг!""");
-                sendMessage.setReplyMarkup(keyboard.panelBtns());
+                SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CONTRACTOR));
+                sendMessage.setReplyMarkup(keyboard.panelBtns(chatId));
                 feign.sendMessage(sendMessage);
             }
             case "Nobody" -> {
-                SendMessage sendMessage = new SendMessage(chatId, "Рўйхатдан ўтиш муваффақиятли якунланди✅\n\n" + userService.getName(update) + ", сиз ҳақингизда ҳеч қандай маълумот топилмади!\nМаълумотларингиз тасдиқланишини кутинг.");
+                SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.ALREADY_REGISTRATION));
                 sendMessage.setReplyMarkup(keyboard.startBtn());
                 feign.sendMessage(sendMessage);
             }
             case "null" -> {
-                SendMessage sendMessage = new SendMessage(chatId, userService.getName(update) + ", сиз ҳақингизда ҳеч қандай маълумот топилмади!\nМаълумотларингиз тасдиқланишини кутинг.");
+                SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_INFO_ROLE));
                 feign.sendMessage(sendMessage);
             }
         }
@@ -128,7 +124,7 @@ public class BotService {
         String chatId = utilService.getChatIdFromUpdate(update);
         String role = userService.getRole(chatId);
         if (role.equals("Nobody") || role.equals("Contractor")){
-            SendMessage sendMessage = new SendMessage(chatId, "Буйруқдан фойдаланишга рухсат йўқ!");
+            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
             feign.sendMessage(sendMessage);
             return;
         }
@@ -154,14 +150,14 @@ public class BotService {
                 if (text.startsWith("Код") || text.startsWith("\nШтрих")){
                     productService.saveCode(update.getMessage().getText(), chatId);
                 }
-                sendMessage.setReplyMarkup(keyboard.nullBtn(chatId));
+                sendMessage.setReplyMarkup(keyboard.nullBtn(chatId, chatId));
                 feign.sendMessage(sendMessage);
             } else {
                 SendMessage sendMessage = new SendMessage(chatId, "Something went wrong! (Employee)");
                 feign.sendMessage(sendMessage);
             }
         }catch (Exception e){
-            SendMessage sendMessage = new SendMessage(chatId, "Ушбу маҳсулот ҳақида маълумот топилмади!");
+            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.PRODUCT404));
             feign.sendMessage(sendMessage);
         }
     }
@@ -197,7 +193,7 @@ public class BotService {
         } else if (role.equals("Employee")) {
             fileService.saveMethodType(chatId, "EMPLOYEE");
         } else {
-            SendMessage sendMessage = new SendMessage(chatId, "Буйруқдан фойдаланишга рухсат йўқ!");
+            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
             feign.sendMessage(sendMessage);
             return;
         }
@@ -220,11 +216,11 @@ public class BotService {
                 SendMessage sendMessage = new SendMessage(chatId, text);
                 feign.sendMessage(sendMessage);
             } else {
-                SendMessage sendMessage = new SendMessage(chatId, "Сизда баланс бўйича ҳеч қандай маълумот мавжуд эмас!");
+                SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_BALANCE));
                 feign.sendMessage(sendMessage);
             }
         }catch (Exception e){
-            SendMessage sendMessage = new SendMessage(chatId, "Сизда баланс бўйича ҳеч қандай маълумот мавжуд эмас!");
+            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_BALANCE));
             feign.sendMessage(sendMessage);
         }
     }
@@ -234,31 +230,39 @@ public class BotService {
             String chatId = utilService.getChatIdFromUpdate(update);
             String role = userService.getRole(chatId);
             if (role.equals("Nobody") || role.equals("Employee")){
-                SendMessage sendMessage = new SendMessage(chatId, "Буйруқдан фойдаланишга рухсат йўқ!");
+                SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
                 feign.sendMessage(sendMessage);
                 return;
             }
             if (state == BotState.REPORTS) {
                 fileService.saveEndDate(chatId, update.getCallbackQuery().getData());
-                sendAllDate(update);
-                sendReport(update);
-//                sendReportAsImage(update);
-            } else {
+            } else if (state == BotState.SEND_BY_MONTH){
                 LocalDate[] monthDates = UtilService.getFirstAndLastDayOfMonth(update.getCallbackQuery().getData());
-                if (monthDates != null) {
-                    LocalDate firstDay = monthDates[0];
-                    LocalDate lastDay = monthDates[1];
-
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                    fileService.saveStartDate(chatId, formatter.format(firstDay));
-                    fileService.saveEndDate(chatId, formatter.format(lastDay));
-                    sendAllDate(update);
-                    sendReport(update);
-//                    sendReportAsImage(update);
-                } else {
-                    System.out.println("Oyni tanlashda xatolik yuz berdi");
-                }
+                assert monthDates != null;
+                fileService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(monthDates[0]));
+                fileService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(monthDates[1]));
+            } else if (state == BotState.SEND_BY_DAY) {
+                fileService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(LocalDate.now()));
+                fileService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(LocalDate.now()));
+            } else if (state == BotState.SEND_BY_WEEK) {
+                LocalDate[] day = utilService.getBeginningOfWeekAndToday();
+                fileService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(day[0]));
+                fileService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(day[1]));
+            } else if (state == BotState.SEND_BY_LAST_MONTH) {
+                LocalDate[] dates = UtilService.getFirstDayOfMonthAndToday();
+                fileService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(dates[0]));
+                fileService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(dates[1]));
+            } else if (state == BotState.SEND_BY_SEASON) {
+                LocalDate[] firstDayOfQuarterAndToday = UtilService.getFirstDayOfQuarterAndToday();
+                fileService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(firstDayOfQuarterAndToday[0]));
+                fileService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(firstDayOfQuarterAndToday[1]));
+            } else if (state == BotState.SEND_BY_YEAR) {
+                LocalDate[] firstDayOfYearAndToday = UtilService.getFirstDayOfYearAndToday();
+                fileService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(firstDayOfYearAndToday[0]));
+                fileService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(firstDayOfYearAndToday[1]));
             }
+            sendAllDate(update);
+            sendReport(update);
         } catch (Exception e) {
             System.out.println(LocalDate.now()+" "+userService.getName(update)+", "+utilService.getChatIdFromUpdate(update)+", File jo`natish bilan bog`liq xatolik, botService.getReport");
         }
@@ -268,7 +272,7 @@ public class BotService {
         String chatId = utilService.getChatIdFromUpdate(update);
         String role = userService.getRole(chatId);
         if (role.equals("Nobody") || role.equals("Employee")){
-            SendMessage sendMessage = new SendMessage(chatId, "Буйруқдан фойдаланишга рухсат йўқ!");
+            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
             feign.sendMessage(sendMessage);
             return;
         }
@@ -278,8 +282,8 @@ public class BotService {
         }else if (state == BotState.GET_START_DATE)
             fileService.saveReportId(chatId, 1);
         sendMessage.setChatId(chatId);
-        sendMessage.setText("⏰Бошланғич санани танланг:");
-        sendMessage.setReplyMarkup(keyboard.calendarBtns(LocalDate.now().toString()));
+        sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_PERIOD));
+        sendMessage.setReplyMarkup(keyboard.periodKeyboards(chatId));
         feign.sendMessage(sendMessage);
     }
 
@@ -289,8 +293,8 @@ public class BotService {
         EditMessageText editMessageText = new EditMessageText();
         editMessageText.setChatId(chatId);
         editMessageText.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
-        String text = "⏰Бошланғич сана -> "+update.getCallbackQuery().getData()+"\n|\n" +
-                "Охирги санани танланг:";
+        String text = utilService.getTextByLanguage(chatId, Constant.START_DATE)+update.getCallbackQuery().getData()+"\n|\n" +
+                utilService.getTextByLanguage(chatId, Constant.CHOOSE_END_DATE);
         editMessageText.setText(text);
         editMessageText.setReplyMarkup(keyboard.calendarBtns(LocalDate.now().toString()));
         feign.editMessageText(editMessageText);
@@ -309,8 +313,7 @@ public class BotService {
             feign.editMessageReplyMarkup(editMarkup);
         } catch (Exception e) {
             String chatId = utilService.getChatIdFromUpdate(update);
-            SendMessage sendMessage = new SendMessage(chatId, "\uD83C\uDD98Давр танлашда хатолик юз берди! \n" +
-                    "⬅️Жараённи қайтадан бошланг");
+            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.ERROR_CHOOSE_DATE));
             feign.sendMessage(sendMessage);
         }
     }
@@ -475,10 +478,9 @@ public class BotService {
         }
         editMessageText.setChatId(chatId.toString());
         editMessageText.setMessageId(messageId);
-        editMessageText.setText("\uD83D\uDCC3 Server bilan xatolik yuz berdi\\ botService.send404");
+        editMessageText.setText(utilService.getTextByLanguage(chatId.toString(), Constant.ERROR_500));
         feign.editMessageText(editMessageText);
     }
-
 
 
     public void sendAllDate(Update update){
@@ -496,7 +498,7 @@ public class BotService {
             EditMessageText editMessageText = new EditMessageText();
             editMessageText.setChatId(chatId.toString());
             editMessageText.setMessageId(messageId);
-            String text = "⏰ Бошланғич сана-> " + dateDTO.getStartDate() + "\n" + "⏰ Охирги сана -> " + dateDTO.getEndDate();
+            String text = utilService.getTextByLanguage(chatId.toString(), Constant.START_DATE) + dateDTO.getStartDate() + "\n" + utilService.getTextByLanguage(chatId.toString(), Constant.END_DATE) + dateDTO.getEndDate();
             editMessageText.setText(text);
             editMessageText.setReplyMarkup(null);
             feign.editMessageText(editMessageText);
@@ -505,13 +507,10 @@ public class BotService {
         }
     }
 
-
-
     public void sendError(Update update) {
         String chatId = utilService.getChatIdFromUpdate(update);
         EditMessageText editMessageText = new EditMessageText();
-        editMessageText.setText("\uD83C\uDD98Давр танлашда хатолик юз берди! \n" +
-                "⬅️Жараённи қайтадан бошланг");
+        editMessageText.setText(utilService.getTextByLanguage(chatId, Constant.ERROR_CHOOSE_DATE));
         editMessageText.setChatId(chatId);
         editMessageText.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
         editMessageText.setReplyMarkup(null);
@@ -529,45 +528,45 @@ public class BotService {
             userService.saveUserName(update);
         }
         if (!getPhone(update)) {
-            sendMessage.setText("Aссалому алайкум " + userService.getName(update) + "\n▪️Рўйхатдан ўтиш учун телефон рақамингизни юборинг!");
+            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.REGISTRATION));
             feign.sendMessage(sendMessage);
         }
-        if (message.getText().equals("\uD83D\uDCC5АКТ СВEРКА")){
+        if (message.getText().equals(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA))){
             sendStartDate(BotState.GET_START_DATEV2, update);
             return;
         }
-        if (message.getText().equals("\uD83D\uDCB0БАЛАНС")){
+        if (message.getText().equals(utilService.getTextByLanguage(chatId, Constant.BALANCE))){
             getBalance(update);
             return;
         }
-        if (message.getText().equals("\uD83D\uDCC5АКТ СВEРКА (товар)")){
+        if (message.getText().equals(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA_TOVAR))){
             sendStartDate(BotState.GET_START_DATE, update);
             return;
         }
-        if (message.getText().equals("/settings")){
-            sendTypeFile(update);
-            return;
-        }
+//        if (message.getText().equals("/settings")){
+//            sendTypeFile(update);
+//            return;
+//        }
         if (UtilService.containsOnlyNumbers(update.getMessage().getText())){
             Employee(update);
         }
     }
 
-    public void sendTypeFile(Update update) {
+    public void sendSettings(Update update) {
         String chatId = utilService.getChatIdFromUpdate(update);
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
-        sendMessage.setText("Маълумотларни қайси форматда қабул қилмоқчисиз?");
-        sendMessage.setReplyMarkup(keyboard.typeFileButtons());
+        sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
+        sendMessage.setReplyMarkup(keyboard.settings(chatId));
         feign.sendMessage(sendMessage);
     }
 
     public void editTypeFile(BotState state, Update update) {
         String chatId = utilService.getChatIdFromUpdate(update);
         String role = userService.getRole(chatId);
-        SendMessage sendMessage = new SendMessage(chatId, "Жаражонни давом еттиришингиз мумкин.");
         if (role.equals("Nobody")){
-            sendMessage.setText("Буйруқдан фойдаланишга рухсат йўқ!");
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
             feign.sendMessage(sendMessage);
             return;
         }
@@ -582,13 +581,83 @@ public class BotService {
         EditMessageText editMessageText = new EditMessageText();
         editMessageText.setChatId(chatId);
         editMessageText.setMessageId(message.getMessageId());
-        editMessageText.setText("Маълумотларингиз муваффақиятли узгартирилди!");
+        editMessageText.setText(utilService.getTextByLanguage(chatId, Constant.CHANGE_TYPE_FILE_200)+update.getCallbackQuery().getData());
         feign.editMessageText(editMessageText);
-        if (role.equals("Contractor")){
-            sendMessage.setReplyMarkup(keyboard.panelBtns());
-        } else {
-            sendMessage.setReplyMarkup(keyboard.nullBtn(chatId));
+    }
+
+    public void sendStartDateAsCalendar(Update update) {
+        String chatId = utilService.getChatIdFromUpdate(update);
+        Message message = utilService.getMessageFromUpdate(update);
+        String role = userService.getRole(chatId);
+        if (role.equals("Nobody") || role.equals("Employee")){
+            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
+            feign.sendMessage(sendMessage);
+            return;
         }
+        EditMessageText sendMessage = new EditMessageText();
+        sendMessage.setChatId(chatId);
+        sendMessage.setMessageId(message.getMessageId());
+        sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_START_DATE));
+        sendMessage.setReplyMarkup(keyboard.calendarBtns(LocalDate.now().toString()));
+        feign.editMessageText(sendMessage);
+    }
+
+    public void sendTypeFile(Update update) {
+        String chatId = utilService.getChatIdFromUpdate(update);
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_FORMAT));
+        sendMessage.setReplyMarkup(keyboard.typeFileButtons(chatId));
+        feign.sendMessage(sendMessage);
+    }
+
+    public void sendLanguage(Update update) {
+        String chatId = utilService.getChatIdFromUpdate(update);
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_LANGUAGE));
+        sendMessage.setReplyMarkup(keyboard.chooseLanguage());
+        feign.sendMessage(sendMessage);
+    }
+
+    public void editLanguage(BotState state, Update update) {
+        String chatId = utilService.getChatIdFromUpdate(update);
+        String role = userService.getRole(chatId);
+        SendMessage sendMessage = new SendMessage();
+        if (role.equals("Nobody")){
+            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
+            feign.sendMessage(sendMessage);
+            return;
+        }
+        Message message = (update.hasMessage())?update.getMessage():update.getCallbackQuery().getMessage();
+        if (state == BotState.EDIT2UZ){
+            userService.saveLanguage(chatId, "uz");
+        } else if (state == BotState.EDIT2RU) {
+            userService.saveLanguage(chatId, "ru");
+        } else if (state == BotState.EDIT2KRIL) {
+            userService.saveLanguage(chatId, "kril");
+        }
+        EditMessageText editMessageText = new EditMessageText();
+        editMessageText.setChatId(chatId);
+        editMessageText.setMessageId(message.getMessageId());
+        editMessageText.setText(utilService.getTextByLanguage(chatId, Constant.CHANGE_LANGUAGE_200)+update.getCallbackQuery().getData());
+        feign.editMessageText(editMessageText);
+        sendMessage.setChatId(chatId);
+        sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.TO_BE_CONTINUED));
+        sendMessage.setReplyMarkup(keyboard.settings(chatId));
+        feign.sendMessage(sendMessage);
+    }
+
+    public void sendMainMenu(Update update) {
+        String chatId = utilService.getChatIdFromUpdate(update);
+        SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
+        sendMessage.setReplyMarkup(keyboard.panelBtns(chatId));
+        feign.sendMessage(sendMessage);
+    }
+
+    public void sendContinue(Update update) {
+        String chatId = utilService.getChatIdFromUpdate(update);
+        SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
         feign.sendMessage(sendMessage);
     }
 }

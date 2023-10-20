@@ -46,7 +46,7 @@ public class UserService {
                 currentDate.getMonth();
                 LocalDate lastDayOfMonthDate = currentDate.withDayOfMonth(
                         currentDate.getMonth().length(currentDate.isLeapYear()));
-                DateDTO DTO = new DateDTO(update.getMessage().getFrom().getFirstName(), update.getMessage().getChatId().toString(), 1, "REPORT", LocalDate.now().toString(), lastDayOfMonthDate.toString(), "");
+                DateDTO DTO = new DateDTO(update.getMessage().getFrom().getFirstName(), update.getMessage().getChatId().toString(), 1, "REPORT", LocalDate.now().toString(), lastDayOfMonthDate.toString(), "", "pdf");
                 fileRepository.save(DTO);
             }
             if (optionalUser.isEmpty()) {
@@ -56,6 +56,14 @@ public class UserService {
         return new UserDTO(optionalUser.get().getState());
     }
 
+    public String getLanguage(Update update){
+        String chatId = utilService.getChatIdFromUpdate(update);
+        Optional<Users> users = userRepository.findByChatId(chatId);
+        if (users.isPresent()){
+            return users.get().getLanguage();
+        }
+        return "kril";
+    }
 
     public String getRoleInURL(String chatId){
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
@@ -89,7 +97,7 @@ public class UserService {
         Message message = (update.hasMessage())?update.getMessage(): update.getCallbackQuery().getMessage();
         String role = getRoleInURL(chatId);
         userRepository.save(new Users(message.getChatId().toString(), message.getFrom().getFirstName(),
-                message.getFrom().getLastName(), message.getFrom().getUserName(), role));
+                message.getFrom().getLastName(), message.getFrom().getUserName(), role, "kril"));
         Market market = marketService.getMarket(new Long(data));
         Optional<Users> usersOptional = userRepository.findByChatId(chatId);
         if (usersOptional.isPresent()){
@@ -120,6 +128,15 @@ public class UserService {
         if (optionalUser.isPresent()) {
             Users user = optionalUser.get();
             user.setRole(role);
+            userRepository.save(user);
+        }
+    }
+
+    public void saveLanguage(String chatId, String language) {
+        Optional<Users> optionalUser = userRepository.findByChatId(chatId);
+        if (optionalUser.isPresent()) {
+            Users user = optionalUser.get();
+            user.setLanguage(language);
             userRepository.save(user);
         }
     }
@@ -173,5 +190,11 @@ public class UserService {
         if (user.isPresent())
             return user.get().getFirstname();
         return update.getMessage().getFrom().getFirstName();
+    }
+
+    public BotState getState(Update update) {
+        String chatId = utilService.getChatIdFromUpdate(update);
+        Optional<Users> user = userRepository.findByChatId(chatId);
+        return user.map(Users::getState).orElse(null);
     }
 }

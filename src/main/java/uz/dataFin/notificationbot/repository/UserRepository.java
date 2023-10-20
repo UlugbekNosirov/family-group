@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<Users,Long> {
     Optional<Users> findByChatId(String chatId);
     Optional<Users> findRoleByChatId(String chatId);
+
 }

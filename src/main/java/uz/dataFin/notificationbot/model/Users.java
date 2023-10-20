@@ -28,6 +28,8 @@ public class Users extends BaseModel {
 
     String Role;
 
+    String language;
+
     @Column(unique = true)
     String phone;
 
@@ -37,11 +39,12 @@ public class Users extends BaseModel {
     @ManyToMany
     List<Market> marketList = new ArrayList<>();
 
-    public Users(String chatId, String firstname, String lastname, String username, String role) {
+    public Users(String chatId, String firstname, String lastname, String username, String role, String language) {
         this.chatId = chatId;
         this.firstname = firstname;
         this.lastname = lastname;
         this.username = username;
         this.Role = role;
+        this.language = language;
     }
 }
