@@ -39,12 +39,13 @@ public class Users extends BaseModel {
     @ManyToMany
     List<Market> marketList = new ArrayList<>();
 
-    public Users(String chatId, String firstname, String lastname, String username, String role, String language) {
+    public Users(String chatId, String firstname, String lastname, String username, String role, BotState state, String language) {
         this.chatId = chatId;
         this.firstname = firstname;
         this.lastname = lastname;
         this.username = username;
         this.Role = role;
+        this.state = state;
         this.language = language;
     }
 }

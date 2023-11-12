@@ -25,7 +25,7 @@ public interface Constant {
     String MONTH = "Ой/Месяц/Oy";
     String QUARTER = "Квартал/Квартал/Kvartal";
     String YEAR = "Йил/Год/Yil";
-    String OTHER = "Бошқа.../Другие.../Boshqa...";
+    String OTHER = "Бошқа.../Другой.../Boshqa...";
     String CHOOSE_START_DATE = "Бошланғич санани танланг.../Выберите дату начала.../Boshlang‘ich sanani tanlang...";
     String START_DATE = "⏰Бошланғич сана -> /⏰Дата начала -> /⏰Boshlang‘ich sana -> ";
     String END_DATE = "⏰Охирги сана -> /⏰Дата конец -> /⏰Oxirgi sana -> ";
@@ -40,5 +40,5 @@ public interface Constant {
     String TO_BE_CONTINUED = "Жараённи давом эттиришингиз мумкин!/Вы можете продолжить процесс!/Jarayonni davom ettirishingiz mumkin!";
     String MAIN_MENU = "Қуйидаги буйруқлардан бирини танланг.../Выберите одну из команд ниже.../Quyidagi buyruqlardan birini tanlang...";
     String BACK = "🔙Асосий менюга/🔙В главное меню/🔙Asosiy menyuga";
-    String REQUEST_URI = "http://91.219.62.18/test_bot_benazir/hs";
+    String REQUEST_URI = "http://91.219.62.18/MUZAFFARXONMANNOL/hs";
 }

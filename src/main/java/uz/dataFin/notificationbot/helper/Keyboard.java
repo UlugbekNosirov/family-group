@@ -306,5 +306,4 @@ public class Keyboard {
         inlineKeyboardButton.setText(text);
         return inlineKeyboardButton;
     }
-
 }

@@ -76,6 +76,17 @@ public class UtilService {
         return "1148134936";
     }
 
+    public Integer getMessageIdFromUpdate(Update update){
+        if (update.hasMessage()){
+            return update.getMessage().getMessageId();
+        }else if (update.hasCallbackQuery()){
+            return update.getCallbackQuery().getMessage().getMessageId();
+        }else {
+            System.out.println("chatId ni olishda xatolik");
+        }
+        return 1148134936;
+    }
+
     public static LocalDate[] getFirstDayOfMonthAndToday() {
         LocalDate today = LocalDate.now();
         LocalDate firstDayOfMonth = LocalDate.of(today.getYear(), today.getMonth(), 1);
@@ -122,9 +133,8 @@ public class UtilService {
             file.toFile().mkdirs();
         return file;
     }
-    public LocalDate setDate(Update update) {
-        String inlineDate = update.getCallbackQuery().getData();
-        String[] inD = inlineDate.split("-");
+    public LocalDate setDate(String callBackData) {
+        String[] inD = callBackData.split("-");
         int year = Integer.parseInt(inD[0]);
         int month = Integer.parseInt(inD[1]);
         int day = 1;

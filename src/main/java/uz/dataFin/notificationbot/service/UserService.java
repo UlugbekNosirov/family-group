@@ -56,15 +56,6 @@ public class UserService {
         return new UserDTO(optionalUser.get().getState());
     }
 
-    public String getLanguage(Update update){
-        String chatId = utilService.getChatIdFromUpdate(update);
-        Optional<Users> users = userRepository.findByChatId(chatId);
-        if (users.isPresent()){
-            return users.get().getLanguage();
-        }
-        return "kril";
-    }
-
     public String getRoleInURL(String chatId){
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         try {
@@ -97,7 +88,7 @@ public class UserService {
         Message message = (update.hasMessage())?update.getMessage(): update.getCallbackQuery().getMessage();
         String role = getRoleInURL(chatId);
         userRepository.save(new Users(message.getChatId().toString(), message.getFrom().getFirstName(),
-                message.getFrom().getLastName(), message.getFrom().getUserName(), role, "kril"));
+                message.getFrom().getLastName(), message.getFrom().getUserName(), role, BotState.SEND_PHONE, "kril"));
         Market market = marketService.getMarket(new Long(data));
         Optional<Users> usersOptional = userRepository.findByChatId(chatId);
         if (usersOptional.isPresent()){
@@ -155,8 +146,7 @@ public class UserService {
         return userRepository.findByChatId(chatId).orElse(null);
     }
 
-    public Boolean getPhone(Update update){
-        String chatId = utilService.getChatIdFromUpdate(update);
+    public Boolean getPhone(String chatId){
         Optional<Users> optionalUser = userRepository.findByChatId(chatId);
         if (optionalUser.isPresent()){
             String phone = optionalUser.get().getPhone();
@@ -175,21 +165,19 @@ public class UserService {
         }
     }
 
-    public void saveUserName(Update update) {
-        String chatId = utilService.getChatIdFromUpdate(update);
+    public void saveUserName(Message message, String chatId) {
         Optional<Users> user = userRepository.findByChatId(chatId);
         if (user.isPresent()){
-            user.get().setFirstname(update.getMessage().getText());
+            user.get().setFirstname(message.getText());
             userRepository.save(user.get());
         }
     }
 
-    public String getName(Update update) {
-        String chatId = utilService.getChatIdFromUpdate(update);
+    public String getName(String chatId) {
         Optional<Users> user = userRepository.findByChatId(chatId);
         if (user.isPresent())
             return user.get().getFirstname();
-        return update.getMessage().getFrom().getFirstName();
+        return "No name!";
     }
 
     public BotState getState(Update update) {

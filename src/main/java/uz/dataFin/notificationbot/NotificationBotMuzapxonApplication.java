@@ -13,10 +13,10 @@ import static uz.dataFin.notificationbot.utils.Security.*;
 @SpringBootApplication
 @EnableFeignClients
 @RequiredArgsConstructor
-public class NotificationBotTEXAApplication {
+public class NotificationBotMuzapxonApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(NotificationBotTEXAApplication.class, args);
+        SpringApplication.run(NotificationBotMuzapxonApplication.class, args);
         System.out.println(restTemplate().getForObject(REQUEST_FULL_PATH + Method.SET_WEB_HOOK +  GLOBAL_URL+ MY_URL, String.class));
     }
     @Bean

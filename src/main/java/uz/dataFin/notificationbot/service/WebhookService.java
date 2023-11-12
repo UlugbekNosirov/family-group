@@ -2,6 +2,7 @@ package uz.dataFin.notificationbot.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import uz.dataFin.notificationbot.payload.UserDTO;
@@ -17,9 +18,11 @@ public class WebhookService {
     public void onUpdateToReceive(Update update) {
         BotState state = botService.getAndCheck(update);
         String chatId = utilService.getChatIdFromUpdate(update);
+        Integer messageId = utilService.getMessageIdFromUpdate(update);
+        Message message  = utilService.getMessageFromUpdate(update);
+        String callBackData = (update.hasCallbackQuery()) ? update.getCallbackQuery().getData() : message.getText();
         System.out.println(state);
         if (update.hasMessage()) {
-            Message message = update.getMessage();
             if (message.hasText()) {
                 String text = message.getText();
                 if (text.equals("/start")) {
@@ -55,8 +58,7 @@ public class WebhookService {
             if (utilService.getErrorDate(update)){
                 state = BotState.SEND_EXCEPTION;
             }else {
-                String callbackData = update.getCallbackQuery().getData();
-                switch (callbackData) {
+                switch (callBackData) {
                     case "pdf" -> state = BotState.EDIT2PDF;
                     case "jpg" -> state = BotState.EDIT2JPG;
                     case "xlsx" -> state = BotState.EDIT2XLSX;
@@ -72,41 +74,41 @@ public class WebhookService {
                 };
                 switch (state) {
                     case GET_START_DATE, GET_START_DATEV2 -> {
-                        if (!utilService.checkBADate(callbackData) && !utilService.getMonth(update)) {
+                        if (!utilService.checkBADate(callBackData) && !utilService.getMonth(update)) {
                             state = BotState.SAVE_START_DATE;
-                        } else if (utilService.checkBADate(callbackData)) {
+                        } else if (utilService.checkBADate(callBackData)) {
                             state = BotState.EDIT_START_DATE;
                         } else if (utilService.getMonth(update)) {
                             state = BotState.SEND_BY_MONTH;
                         }
                     }
                     case EDIT_START_DATE -> {
-                        if (!utilService.checkBADate(callbackData) && !utilService.getMonth(update)) {
+                        if (!utilService.checkBADate(callBackData) && !utilService.getMonth(update)) {
                             state = BotState.SAVE_START_DATE;
                         }else if (utilService.getMonth(update)) {
                             state = BotState.SEND_BY_MONTH;
                         }
                     }
                     case SAVE_START_DATE -> {
-                        if (!utilService.checkBADate(callbackData) && !utilService.getMonth(update)) {
+                        if (!utilService.checkBADate(callBackData) && !utilService.getMonth(update)) {
                             state = BotState.REPORTS;
-                        } else if (utilService.checkBADate(callbackData)) {
+                        } else if (utilService.checkBADate(callBackData)) {
                             state = BotState.EDIT_END_DATE;
                         } else if (utilService.getMonth(update)) {
                             state = BotState.SEND_BY_MONTH;
                         }
                     }
                     case EDIT_END_DATE -> {
-                        if (!utilService.checkBADate(callbackData) && utilService.getMonth(update)) {
+                        if (!utilService.checkBADate(callBackData) && utilService.getMonth(update)) {
                             state = BotState.SEND_BY_MONTH;
-                        } else if (!utilService.checkBADate(callbackData) && !utilService.getMonth(update)) {
+                        } else if (!utilService.checkBADate(callBackData) && !utilService.getMonth(update)) {
                             state = BotState.REPORTS;
                         }else if (utilService.getMonth(update)) {
                             state = BotState.SEND_BY_MONTH;
                         }
                     }
                 }
-                if (callbackData.equals(Constant.ENTER_MARKET_NAME_BTN)) {
+                if (callBackData.equals(Constant.ENTER_MARKET_NAME_BTN)) {
                     state = BotState.SEND_MARKET_NAME_TEXT;
                 }
             }
@@ -114,23 +116,23 @@ public class WebhookService {
 
 
         switch (state) {
-            case SEND_PHONE, GET_CONTACT -> botService.getMainMenuSend(update);
-            case GET_PRODUCT -> botService.Employee(update);
-            case SAVE_NAME -> botService.saveName(update);
-            case GET_START_DATE, GET_START_DATEV2 -> botService.sendStartDate(state, update);
-            case SEND_CALENDAR -> botService.sendStartDateAsCalendar(update);
-            case REPORTS, SEND_BY_MONTH, SEND_BY_DAY, SEND_BY_WEEK, SEND_BY_LAST_MONTH, SEND_BY_SEASON, SEND_BY_YEAR -> botService.getReport(state, update);
-            case SAVE_START_DATE-> botService.saveStartDate(update);
-            case SEND_EXCEPTION-> botService.sendError(update);
-            case GET_BALANCE-> botService.getBalance(update);
-            case EDIT_START_DATE, EDIT_END_DATE-> botService.editDate(update);
-            case SEND_BTN_SETTING-> botService.sendSettings(update);
-            case SEND_BTN_TYPE_FILE-> botService.sendTypeFile(update);
-            case SEND_BTN_CHANGE_LANG-> botService.sendLanguage(update);
-            case SEND_BTN_MAIN_MANU-> botService.sendMainMenu(update);
-            case SEND_CONTINUE-> botService.sendContinue(update);
-            case EDIT2XLSX, EDIT2JPG, EDIT2PDF-> botService.editTypeFile(state, update);
-            case EDIT2UZ, EDIT2RU, EDIT2KRIL-> botService.editLanguage(state, update);
+            case SEND_PHONE, GET_CONTACT -> botService.getMainMenuSend(chatId);
+            case GET_PRODUCT -> botService.Employee(message);
+            case SAVE_NAME -> botService.saveName(message, chatId);
+            case GET_START_DATE, GET_START_DATEV2 -> botService.sendStartDate(state, chatId);
+            case SEND_CALENDAR -> botService.sendStartDateAsCalendar(message, chatId);
+            case REPORTS, SEND_BY_MONTH, SEND_BY_DAY, SEND_BY_WEEK, SEND_BY_LAST_MONTH, SEND_BY_SEASON, SEND_BY_YEAR -> botService.getReport(state, chatId, messageId, callBackData);
+            case SAVE_START_DATE-> botService.saveStartDate(message, chatId, callBackData);
+            case SEND_EXCEPTION-> botService.sendError(chatId, messageId);
+            case GET_BALANCE-> botService.getBalance(chatId);
+            case EDIT_START_DATE, EDIT_END_DATE-> botService.editDate(chatId, messageId, callBackData);
+            case SEND_BTN_SETTING-> botService.sendSettings(chatId);
+            case SEND_BTN_TYPE_FILE-> botService.sendTypeFile(chatId);
+            case SEND_BTN_CHANGE_LANG-> botService.sendLanguage(chatId);
+            case SEND_BTN_MAIN_MANU-> botService.sendMainMenu(chatId);
+            case SEND_CONTINUE-> botService.sendContinue(chatId);
+            case EDIT2XLSX, EDIT2JPG, EDIT2PDF-> botService.editTypeFile(state, chatId, messageId, callBackData);
+            case EDIT2UZ, EDIT2RU, EDIT2KRIL-> botService.editLanguage(state, chatId, messageId, callBackData);
         }
         if (state!=BotState.SAVE_NAME)
             if (state!=BotState.SEND_CALENDAR)
