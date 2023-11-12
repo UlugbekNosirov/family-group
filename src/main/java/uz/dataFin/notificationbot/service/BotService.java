@@ -130,7 +130,7 @@ public class BotService {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth("Админстратор", "2275157", StandardCharsets.UTF_8);
+            headers.setBasicAuth(Security.LOGIN, Security.PASSWORD, StandardCharsets.UTF_8);
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             HttpEntity<DateDTO> entity = new HttpEntity<>(dateDTO, headers);
 
@@ -171,15 +171,15 @@ public class BotService {
 //        }
     }
 
-    public void sendFileToUser() {
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(() -> {
-            List<SalesReceipt> nonActiveUsers = salesReceiptService.getNonActiveUsers();
-            for (SalesReceipt salesReceipt : nonActiveUsers) {
-                sendCheque(salesReceipt);
-            }
-        }, 0, 1, TimeUnit.MINUTES);
-    }
+//    public void sendFileToUser() {
+//        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+//        scheduler.scheduleAtFixedRate(() -> {
+//            List<SalesReceipt> nonActiveUsers = salesReceiptService.getNonActiveUsers();
+//            for (SalesReceipt salesReceipt : nonActiveUsers) {
+//                sendCheque(salesReceipt);
+//            }
+//        }, 0, 1, TimeUnit.MINUTES);
+//    }
 
     public void getBalance(String chatId) {
         String role = userService.getRole(chatId);
@@ -196,7 +196,7 @@ public class BotService {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth("Админстратор", "2275157", StandardCharsets.UTF_8);
+            headers.setBasicAuth(Security.LOGIN, Security.PASSWORD, StandardCharsets.UTF_8);
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             HttpEntity<DateDTO> entity = new HttpEntity<>(dateDTO, headers);
 
@@ -394,7 +394,7 @@ public class BotService {
     public void sendChequeAsPhoto(SalesReceipt salesReceipt, File file) {
         try {
             String chatId = salesReceipt.getClientId();
-            String uri = "https://api.telegram.org/bot" + Security.BOT_TOKEN + "/sendPhoto";
+            String uri = Security.REQUEST_FULL_PATH + "/sendPhoto";
             HttpPost httppost = new HttpPost(uri);
 
             File photoFile = new File(file.getAbsolutePath());

@@ -8,6 +8,7 @@ import uz.dataFin.notificationbot.model.DateDTO;
 import uz.dataFin.notificationbot.model.SalesReceipt;
 import uz.dataFin.notificationbot.repository.FileRepository;
 import uz.dataFin.notificationbot.utils.Constant;
+import uz.dataFin.notificationbot.utils.Security;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -59,7 +60,7 @@ public class FileService {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth("Админстратор", "2275157", StandardCharsets.UTF_8);
+            headers.setBasicAuth(Security.LOGIN, Security.PASSWORD, StandardCharsets.UTF_8);
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             HttpEntity<DateDTO> entity = new HttpEntity<>(dateDTO, headers);
 
@@ -84,7 +85,7 @@ public class FileService {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth("Админстратор", "2275157", StandardCharsets.UTF_8);
+            headers.setBasicAuth(Security.LOGIN, Security.PASSWORD, StandardCharsets.UTF_8);
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             HttpEntity<SalesReceipt> entity = new HttpEntity<>(salesReceipt, headers);
 

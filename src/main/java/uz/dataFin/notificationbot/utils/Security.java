@@ -6,7 +6,8 @@ public interface Security {
 
     String GLOBAL_URL = "https://benazir.ssglink.uz/";
 //    String GLOBAL_URL = "https://6407-213-230-100-246.ngrok-free.app/";
-
+    String  LOGIN = "Админстратор";
+    String  PASSWORD = "2275157";
     String TELEGRAM_URL = "https://api.telegram.org/";
 
     String MY_URL = "api/telegram/";

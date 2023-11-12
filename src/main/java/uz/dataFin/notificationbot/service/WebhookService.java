@@ -2,7 +2,6 @@ package uz.dataFin.notificationbot.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import uz.dataFin.notificationbot.payload.UserDTO;

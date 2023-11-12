@@ -17,6 +17,7 @@ import uz.dataFin.notificationbot.repository.MarketRepository;
 import uz.dataFin.notificationbot.repository.UserRepository;
 import uz.dataFin.notificationbot.utils.BotState;
 import uz.dataFin.notificationbot.utils.Constant;
+import uz.dataFin.notificationbot.utils.Security;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -60,7 +61,7 @@ public class UserService {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth("Админстратор", "2275157", StandardCharsets.UTF_8);
+            headers.setBasicAuth(Security.LOGIN, Security.PASSWORD, StandardCharsets.UTF_8);
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
             Client client = new Client();
             client.setClientID(chatId);
