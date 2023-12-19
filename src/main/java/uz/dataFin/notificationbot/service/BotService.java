@@ -28,16 +28,19 @@ import uz.dataFin.notificationbot.utils.Constant;
 import uz.dataFin.notificationbot.utils.Security;
 
 import javax.imageio.ImageIO;
+import javax.print.CancelablePrintJob;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -50,6 +53,7 @@ public class BotService {
     private final BalanceService balanceService;
     public final MarketService marketService;
     public final FileService fileService;
+    public final UpdateUserStatusService updateUserStatusService;
     public final ProductService productService;
     private final Keyboard keyboard;
     private final UtilService utilService;
@@ -165,10 +169,18 @@ public class BotService {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(messageDTO.getChatId());
         sendMessage.setText("\uD83C\uDFEA " + market.getName() + "\n" + messageDTO.getText());
+        if (Objects.nonNull(messageDTO.getDocumentID())){
+            sendMessage.setReplyMarkup(keyboard.Query(messageDTO.getChatId()));
+            UpdateUserStatus updateUserStatus = UpdateUserStatus.builder()
+                    .chatId(messageDTO.getChatId())
+                    .Text("\uD83C\uDFEA " + market.getName() + "\n" + messageDTO.getText())
+                    .documentID(messageDTO.getDocumentID())
+                    .clientId(messageDTO.getClientId())
+                    .typeDocument(messageDTO.getTypeDocument())
+                    .status("rejected").build();
+            updateUserStatusService.saveData(updateUserStatus);
+        }
         feign.sendMessage(sendMessage);
-//        if (Objects.nonNull(messageDTO.getUrl())){
-//            salesReceiptService.saveUrlById(messageDTO);
-//        }
     }
 
 //    public void sendFileToUser() {
@@ -315,8 +327,6 @@ public class BotService {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
-
     }
 
     public void sendReport(String chatId, Integer messageId) {
@@ -494,6 +504,7 @@ public class BotService {
         }
         if (!getPhone(chatId)) {
             sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.REGISTRATION));
+            sendMessage.setReplyMarkup(keyboard.createContactMarkup());
             feign.sendMessage(sendMessage);
         }
         if (message.getText().equals(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA))){
@@ -625,5 +636,61 @@ public class BotService {
     public void sendContinue(String chatId) {
         SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
         feign.sendMessage(sendMessage);
+    }
+
+    public void sendCheckingMoney(BotState state, Message message) {
+        UpdateUserStatus data = updateUserStatusService.getData(message.getChatId().toString(), message.getText());
+        if (state == BotState.SEND_AGREED_MONEY) {
+            Integer response = postStatus(data, "agreed");
+            if (response == 200) {
+                try {
+                    EditMessageText editMessageText = new EditMessageText();
+                    editMessageText.setChatId(message.getChatId().toString());
+                    editMessageText.setReplyMarkup(null);
+                    editMessageText.setMessageId(message.getMessageId());
+                    editMessageText.setText(utilService.getTextByLanguage(message.getChatId().toString(), Constant.ACCEPT));
+                    feign.editMessageText(editMessageText);
+                } catch (Exception e) {
+                    System.out.println("Cannot edit message text yes/no");
+                }
+            }
+        } else if (state == BotState.SEND_REJECTED_MONEY) {
+            Integer response = postStatus(data, "rejected");
+            if (response == 200) {
+                try {
+                    EditMessageText editMessageText = new EditMessageText();
+                    editMessageText.setChatId(message.getChatId().toString());
+                    editMessageText.setReplyMarkup(null);
+                    editMessageText.setMessageId(message.getMessageId());
+                    editMessageText.setText(utilService.getTextByLanguage(message.getChatId().toString(), Constant.REJECT));
+                    feign.editMessageText(editMessageText);
+                } catch (Exception e) {
+                    System.out.println("Cannot edit message text yes/no");
+                }
+            }
+        }
+    }
+
+    public Integer postStatus(UpdateUserStatus data, String status) {
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth(Security.LOGIN, Security.PASSWORD, StandardCharsets.UTF_8);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            data.setStatus(status);
+            UpdateUserStatus updateUserStatus = updateUserStatusService.updateStatus(data, status);
+            HttpEntity<UpdateUserStatus> entity = new HttpEntity<>(updateUserStatus, headers);
+
+            ResponseEntity<byte[]> response = restTemplate
+                    .setConnectTimeout(Duration.ofSeconds(60))
+                    .setReadTimeout(Duration.ofSeconds(60))
+                    .build()
+                    .exchange(Constant.REQUEST_URI +"/bot/update/status", HttpMethod.POST, entity, byte[].class);
+
+            return response.getStatusCodeValue();
+        }catch (Exception e){
+            System.out.println(LocalDate.now()+" "+data.getText()+", "+", problem");
+        }
+        return 200;
     }
 }

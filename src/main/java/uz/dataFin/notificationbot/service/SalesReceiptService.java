@@ -20,24 +20,24 @@ import java.util.Optional;
 public class SalesReceiptService {
     private final SalesReceiptRepository salesReceiptRepository;
 
-    public void saveUrlById(MessageDTO messageDTO) {
-        Optional<SalesReceipt> byUrl = salesReceiptRepository.findByUrl(messageDTO.getUrl());
-        if (byUrl.isPresent()) {
-            if (byUrl.get().isActive()) {
-                SalesReceipt sale = byUrl.get();
-                sale.setClientId(messageDTO.getChatId());
-                sale.setActive(false);
-                salesReceiptRepository.save(sale);
-            }
-        } else {
-            SalesReceipt sale = new SalesReceipt();
-            sale.setClientId(messageDTO.getChatId());
-            sale.setUrl(messageDTO.getUrl());
-            sale.setMethodType("SALESRECEIPT");
-            sale.setActive(false);
-            salesReceiptRepository.save(sale);
-        }
-    }
+//    public void saveUrlById(MessageDTO messageDTO) {
+//        Optional<SalesReceipt> byUrl = salesReceiptRepository.findByUrl(messageDTO.getUrl());
+//        if (byUrl.isPresent()) {
+//            if (byUrl.get().isActive()) {
+//                SalesReceipt sale = byUrl.get();
+//                sale.setClientId(messageDTO.getChatId());
+//                sale.setActive(false);
+//                salesReceiptRepository.save(sale);
+//            }
+//        } else {
+//            SalesReceipt sale = new SalesReceipt();
+//            sale.setClientId(messageDTO.getChatId());
+//            sale.setUrl(messageDTO.getUrl());
+//            sale.setMethodType("SALESRECEIPT");
+//            sale.setActive(false);
+//            salesReceiptRepository.save(sale);
+//        }
+//    }
 
     public List<SalesReceipt> getNonActiveUsers() {
         return salesReceiptRepository.getAllActiveIsFalse();

@@ -13,5 +13,8 @@ public class MessageDTO {
     private String sum;
     private String dollar;
     private String bonus;
-    private String url;
+    private String documentID;
+    private String clientId;
+    private String typeDocument;
+    private String byWhom;
 }

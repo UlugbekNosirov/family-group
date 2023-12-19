@@ -58,6 +58,8 @@ public class WebhookService {
                 state = BotState.SEND_EXCEPTION;
             }else {
                 switch (callBackData) {
+                    case "agreed" -> state = BotState.SEND_AGREED_MONEY;
+                    case "rejected" -> state = BotState.SEND_REJECTED_MONEY;
                     case "pdf" -> state = BotState.EDIT2PDF;
                     case "jpg" -> state = BotState.EDIT2JPG;
                     case "xlsx" -> state = BotState.EDIT2XLSX;
@@ -117,6 +119,7 @@ public class WebhookService {
         switch (state) {
             case SEND_PHONE, GET_CONTACT -> botService.getMainMenuSend(chatId);
             case GET_PRODUCT -> botService.Employee(message);
+            case SEND_AGREED_MONEY, SEND_REJECTED_MONEY -> botService.sendCheckingMoney(state, message);
             case SAVE_NAME -> botService.saveName(message, chatId);
             case GET_START_DATE, GET_START_DATEV2 -> botService.sendStartDate(state, chatId);
             case SEND_CALENDAR -> botService.sendStartDateAsCalendar(message, chatId);
@@ -135,6 +138,8 @@ public class WebhookService {
         }
         if (state!=BotState.SAVE_NAME)
             if (state!=BotState.SEND_CALENDAR)
-               botService.saveData(update, new UserDTO(state));
+                if (state!= BotState.SEND_AGREED_MONEY)
+                    if (state!= BotState.SEND_REJECTED_MONEY)
+                         botService.saveData(update, new UserDTO(state));
     }
 }

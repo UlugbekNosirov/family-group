@@ -40,5 +40,9 @@ public interface Constant {
     String TO_BE_CONTINUED = "Жараённи давом эттиришингиз мумкин!/Вы можете продолжить процесс!/Jarayonni davom ettirishingiz mumkin!";
     String MAIN_MENU = "Қуйидаги буйруқлардан бирини танланг.../Выберите одну из команд ниже.../Quyidagi buyruqlardan birini tanlang...";
     String BACK = "🔙Асосий менюга/🔙В главное меню/🔙Asosiy menyuga";
-    String REQUEST_URI = "http://91.219.62.18/MUZAFFARXONMANNOL/hs";
+    String YES = "Ха/Да/Ha";
+    String NO = "Йўқ/Нет/Yo'q";
+    String ACCEPT = "Сиз операцияни тасдиқладингиз✅/Вы подтвердили операцию✅/Siz operatsiyani tasdiqladingiz✅";
+    String REJECT = "Операция рад етилди\uD83D\uDE45\u200D♂\uFE0F/В операции было отказано\uD83D\uDE45\u200D♂\uFE0F/Operatsiya rad etildi\uD83D\uDE45\u200D♂\uFE0F";
+    String REQUEST_URI = "http://91.219.62.18/xonchiroq_test/hs";
 }

@@ -92,6 +92,23 @@ public class Keyboard {
         return new InlineKeyboardMarkup(rowList);
     }
 
+    public InlineKeyboardMarkup Query(String chatId) {
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+        List<InlineKeyboardButton> row = new ArrayList<>();
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        InlineKeyboardButton btn1 = new InlineKeyboardButton();
+        btn1.setText(utilService.getTextByLanguage(chatId, Constant.YES));
+        btn1.setCallbackData("agreed");
+        InlineKeyboardButton btn2 = new InlineKeyboardButton();
+        btn1.setText(utilService.getTextByLanguage(chatId, Constant.YES));
+        btn2.setText(utilService.getTextByLanguage(chatId, Constant.NO));
+        btn2.setCallbackData("rejected");
+        row.add(btn1);
+        row.add(btn2);
+        rowList.add(row);
+        return new InlineKeyboardMarkup(rowList);
+    }
+
     public InlineKeyboardMarkup periodKeyboards(String chatId) {
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         List<InlineKeyboardButton> row = new ArrayList<>();

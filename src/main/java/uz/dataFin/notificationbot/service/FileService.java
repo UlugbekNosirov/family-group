@@ -52,6 +52,7 @@ public class FileService {
     }
 
 
+
     public DateDTO getDateDto(String clientId){
         return fileRepository.getDateDTOByClientId(clientId);
     }
@@ -79,6 +80,8 @@ public class FileService {
         }
         return null;
     }
+
+
 
 
      public File getCheque(SalesReceipt salesReceipt) {

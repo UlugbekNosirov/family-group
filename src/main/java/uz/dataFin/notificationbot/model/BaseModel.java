@@ -32,5 +32,5 @@ public abstract class BaseModel {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    private boolean active=true;
+    private boolean active = true;
 }

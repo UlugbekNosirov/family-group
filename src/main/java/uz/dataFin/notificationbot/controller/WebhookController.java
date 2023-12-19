@@ -21,5 +21,4 @@ public class WebhookController {
         webhookService.
                 onUpdateToReceive(update);
     }
-
 }

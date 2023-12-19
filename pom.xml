@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>uz.alif_coder</groupId>
-    <artifactId>NotificationBotMUZAPXONMANNOL</artifactId>
+    <artifactId>NotificationBotXONCHIROQ</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>NotificationBotMUZAPXONMANNOL</name>
-    <description>NotificationBotMUZAPXONMANNOL</description>
+    <name>NotificationBotXONCHIROQ</name>
+    <description>NotificationBotXONCHIROQ</description>
     <properties>
         <java.version>17</java.version>
         <spring-cloud.version>2021.0.0</spring-cloud.version>
