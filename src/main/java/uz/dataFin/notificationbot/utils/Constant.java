@@ -44,5 +44,11 @@ public interface Constant {
     String NO = "Йўқ/Нет/Yo'q";
     String ACCEPT = "Сиз операцияни тасдиқладингиз✅/Вы подтвердили операцию✅/Siz operatsiyani tasdiqladingiz✅";
     String REJECT = "Операция рад етилди\uD83D\uDE45\u200D♂\uFE0F/В операции было отказано\uD83D\uDE45\u200D♂\uFE0F/Operatsiya rad etildi\uD83D\uDE45\u200D♂\uFE0F";
+    String ACCOUNT_DEBT = "Қарздорлик-Ҳақдорлик/Дебитор-Кредитор/Qarzdorlik-Haqdorlik";
+    String WAREHOUSE = "Омбор/Склад/Ombor";
+    String CASH_BOX = "Касса/Касса/Kassa";
+    String COST = "Харажат/Расход/Xarajat";
+    String TRADE = "Савдо/Продажа/Savdo";
+    String CHOOSE_WAREHOUSE = "Омборни танланг.../Выберите склад.../Omborni tanlang...";
     String REQUEST_URI = "http://91.219.62.18/xonchiroq_test/hs";
 }

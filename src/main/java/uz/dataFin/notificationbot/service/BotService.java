@@ -53,6 +53,7 @@ public class BotService {
     private final BalanceService balanceService;
     public final MarketService marketService;
     public final FileService fileService;
+    public final ReportService reportService;
     public final UpdateUserStatusService updateUserStatusService;
     public final ProductService productService;
     private final Keyboard keyboard;
@@ -104,7 +105,7 @@ public class BotService {
             }
             case "Contractor" -> {
                 SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CONTRACTOR));
-                sendMessage.setReplyMarkup(keyboard.panelBtns(chatId));
+                sendMessage.setReplyMarkup(keyboard.panelBtns(role, chatId));
                 feign.sendMessage(sendMessage);
             }
             case "Nobody" -> {
@@ -235,42 +236,62 @@ public class BotService {
     public void getReport(BotState state, String chatId, Integer messageId, String callBackData ) {
         try {
             String role = userService.getRole(chatId);
-            if (role.equals("Nobody") || role.equals("Employee")){
+            LocalDate[] dates = new LocalDate[]{LocalDate.now(), LocalDate.now()};
+            if (role.equals("Nobody") || role.equals("Employee")) {
                 SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
                 feign.sendMessage(sendMessage);
                 return;
             }
+
+            if (state == BotState.SEND_BY_MONTH) {
+                dates = UtilService.getFirstAndLastDayOfMonth(callBackData);
+                assert dates != null;
+            } else if (state == BotState.SEND_BY_WEEK) {
+                dates = utilService.getBeginningOfWeekAndToday();
+            } else if (state == BotState.SEND_BY_LAST_MONTH) {
+                dates = UtilService.getFirstDayOfMonthAndToday();
+            } else if (state == BotState.SEND_BY_SEASON) {
+                dates = UtilService.getFirstDayOfQuarterAndToday();
+            } else if (state == BotState.SEND_BY_YEAR) {
+                dates = UtilService.getFirstDayOfYearAndToday();
+            }
             if (state == BotState.REPORTS) {
                 fileService.saveEndDate(chatId, callBackData);
-            } else if (state == BotState.SEND_BY_MONTH){
-                LocalDate[] monthDates = UtilService.getFirstAndLastDayOfMonth(callBackData);
-                assert monthDates != null;
-                fileService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(monthDates[0]));
-                fileService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(monthDates[1]));
-            } else if (state == BotState.SEND_BY_DAY) {
-                fileService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(LocalDate.now()));
-                fileService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(LocalDate.now()));
-            } else if (state == BotState.SEND_BY_WEEK) {
-                LocalDate[] day = utilService.getBeginningOfWeekAndToday();
-                fileService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(day[0]));
-                fileService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(day[1]));
-            } else if (state == BotState.SEND_BY_LAST_MONTH) {
-                LocalDate[] dates = UtilService.getFirstDayOfMonthAndToday();
+            } else {
                 fileService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(dates[0]));
                 fileService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(dates[1]));
-            } else if (state == BotState.SEND_BY_SEASON) {
-                LocalDate[] firstDayOfQuarterAndToday = UtilService.getFirstDayOfQuarterAndToday();
-                fileService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(firstDayOfQuarterAndToday[0]));
-                fileService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(firstDayOfQuarterAndToday[1]));
-            } else if (state == BotState.SEND_BY_YEAR) {
-                LocalDate[] firstDayOfYearAndToday = UtilService.getFirstDayOfYearAndToday();
-                fileService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(firstDayOfYearAndToday[0]));
-                fileService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(firstDayOfYearAndToday[1]));
             }
-            sendAllDate(chatId, messageId);
-            sendReport(chatId, messageId);
+            if (role.equals("Contractor")) {
+                sendAllDate(chatId, messageId);
+                sendReport(chatId, messageId);
+            } else if (role.equals("ADMIN")) {
+                if (state == BotState.REPORTS) {
+                    reportService.saveEndDate(chatId, callBackData);
+                } else {
+                    reportService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(dates[0]));
+                    reportService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(dates[1]));
+                }
+                sendWareHouseButton(chatId, messageId);
+            }
         } catch (Exception e) {
             System.out.println(LocalDate.now()+" "+userService.getName(chatId)+", "+chatId+", File jo`natish bilan bog`liq xatolik, botService.getReport");
+        }
+    }
+
+    private void sendWareHouseButton(String chatId, Integer messageId) {
+        try {
+            ReportDTO reportDto = reportService.getReportDto(chatId);
+            EditMessageText editMessageText = new EditMessageText();
+            editMessageText.setChatId(chatId);
+            editMessageText.setMessageId(messageId);
+            String text = utilService.getTextByLanguage(chatId, Constant.START_DATE) + reportDto.getStartDate() + "\n" + utilService.getTextByLanguage(chatId, Constant.END_DATE) + reportDto.getEndDate();
+            editMessageText.setText(text);
+            editMessageText.setReplyMarkup(null);
+            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CHOOSE_WAREHOUSE));
+            sendMessage.setReplyMarkup(keyboard.wareHouse(chatId));
+            feign.editMessageText(editMessageText);
+        }catch (Exception e){
+            System.out.println(LocalDate.now()+", "+chatId+", Davr saqlashda xatolik yuz berdi, botService.sendAllDate");
         }
     }
 
@@ -286,6 +307,8 @@ public class BotService {
             fileService.saveReportId(chatId, 2);
         }else if (state == BotState.GET_START_DATE)
             fileService.saveReportId(chatId, 1);
+        else if (state == BotState.GET_START_DATE_WAREHOUSE)
+            reportService.saveNew(chatId);
         sendMessage.setChatId(chatId);
         sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_PERIOD));
         sendMessage.setReplyMarkup(keyboard.periodKeyboards(chatId));
@@ -294,6 +317,7 @@ public class BotService {
 
     public void saveStartDate(Message message, String chatId, String callbackQuery) {
         fileService.saveStartDate(chatId, callbackQuery);
+        reportService.saveStartDate(chatId, callbackQuery);
         EditMessageText editMessageText = new EditMessageText();
         editMessageText.setChatId(chatId);
         editMessageText.setMessageId(message.getMessageId());
@@ -629,7 +653,7 @@ public class BotService {
 
     public void sendMainMenu(String chatId) {
         SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
-        sendMessage.setReplyMarkup(keyboard.panelBtns(chatId));
+        sendMessage.setReplyMarkup(keyboard.panelBtns(userService.getRole(chatId), chatId));
         feign.sendMessage(sendMessage);
     }
 

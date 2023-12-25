@@ -4,18 +4,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import uz.dataFin.notificationbot.model.Market;
 import uz.dataFin.notificationbot.model.Products;
-import uz.dataFin.notificationbot.service.MarketService;
-import uz.dataFin.notificationbot.service.ProductService;
-import uz.dataFin.notificationbot.service.UserService;
-import uz.dataFin.notificationbot.service.UtilService;
+import uz.dataFin.notificationbot.model.WarehouseDTO;
+import uz.dataFin.notificationbot.service.*;
 import uz.dataFin.notificationbot.utils.Constant;
 
+import java.security.Key;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,6 +27,7 @@ public class Keyboard {
 
     private final MarketService marketService;
     private final ProductService productService;
+    private final Api1CService api1CService;
     private final UtilService utilService;
     private final String months[] = {"Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktyabr", "Noyabr", "Dekabr"};
 
@@ -95,7 +96,6 @@ public class Keyboard {
     public InlineKeyboardMarkup Query(String chatId) {
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         List<InlineKeyboardButton> row = new ArrayList<>();
-        List<InlineKeyboardButton> row2 = new ArrayList<>();
         InlineKeyboardButton btn1 = new InlineKeyboardButton();
         btn1.setText(utilService.getTextByLanguage(chatId, Constant.YES));
         btn1.setCallbackData("agreed");
@@ -155,20 +155,76 @@ public class Keyboard {
         return new ReplyKeyboardMarkup(List.of(new KeyboardRow(List.of(contactBtn))), true, false, true, "next");
     }
 
-    public ReplyKeyboardMarkup panelBtns(String chatId) {
+    public ReplyKeyboardMarkup panelBtns(String role, String chatId) {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
         KeyboardRow row = new KeyboardRow();
         KeyboardRow row2 = new KeyboardRow();
+        KeyboardRow row3 = new KeyboardRow();
+        KeyboardRow row4 = new KeyboardRow();
         List<KeyboardRow> rowList = new ArrayList<>();
         markup.setOneTimeKeyboard(false);
         markup.setResizeKeyboard(true);
         markup.setSelective(true);
+        if (role.equals("ADMIN")){
+            row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.WAREHOUSE)));
+            row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.TRADE)));
+            row4.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.ACCOUNT_DEBT)));
+            row4.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.CASH_BOX)));
+            rowList.add(row3);
+            rowList.add(row4);
+        }
         row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA)));
         row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA_TOVAR)));
         row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BALANCE)));
         row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.SETTINGS)));
         rowList.add(row);
         rowList.add(row2);
+        markup.setKeyboard(rowList);
+        return markup;
+    }
+
+    public ReplyKeyboard wareHouse(String chatId) {
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> rowList = new ArrayList<>();
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add(new KeyboardButton("Faqat davr filtri bilan hisobiotni ko'rish"));
+        markup.setOneTimeKeyboard(false);
+        markup.setResizeKeyboard(true);
+        markup.setSelective(true);
+        WarehouseDTO[] warehouseDTO = api1CService.getWarehouses(chatId);
+        for (WarehouseDTO dto : warehouseDTO) {
+            KeyboardRow row = new KeyboardRow();
+            row.add(new KeyboardButton(dto.getName()));
+            rowList.add(row);
+        }
+        KeyboardRow row = new KeyboardRow();
+        row.add(new KeyboardButton("\uD83D\uDD19Orqaga"));
+        row.add(new KeyboardButton("Tovar tanlash"));
+        rowList.add(row);
+        return null;
+    }
+    public ReplyKeyboardMarkup reportBtn(String chatId) {
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
+        KeyboardRow row = new KeyboardRow();
+        KeyboardRow row2 = new KeyboardRow();
+        KeyboardRow row3 = new KeyboardRow();
+        KeyboardRow row4 = new KeyboardRow();
+        List<KeyboardRow> rowList = new ArrayList<>();
+        markup.setOneTimeKeyboard(false);
+        markup.setResizeKeyboard(true);
+        markup.setSelective(true);
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA)));
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA)));
+        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.ACCOUNT_DEBT)));
+        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.WAREHOUSE)));
+        row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.COST)));
+        row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.TRADE)));
+        row4.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BALANCE)));
+        row4.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.SETTINGS)));
+        rowList.add(row);
+        rowList.add(row2);
+        rowList.add(row3);
+        rowList.add(row4);
         markup.setKeyboard(rowList);
         return markup;
     }
@@ -323,4 +379,6 @@ public class Keyboard {
         inlineKeyboardButton.setText(text);
         return inlineKeyboardButton;
     }
+
+
 }

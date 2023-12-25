@@ -36,7 +36,9 @@ public class WebhookService {
                     state = BotState.SEND_BTN_MAIN_MANU;
                 }else if (text.equals(utilService.getTextByLanguage(chatId, Constant.BALANCE))) {
                     state = BotState.GET_BALANCE;
-                } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA_TOVAR))) {
+                } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.WAREHOUSE))) {
+                    state = BotState.GET_START_DATE_WAREHOUSE;
+                } else if (state == BotState.GET_START_DATE_WAREHOUSE) {
                     state = BotState.GET_START_DATE;
                 } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA))) {
                     state = BotState.GET_START_DATEV2;
@@ -74,7 +76,7 @@ public class WebhookService {
                     case "other" -> state = BotState.SEND_CALENDAR;
                 };
                 switch (state) {
-                    case GET_START_DATE, GET_START_DATEV2 -> {
+                    case GET_START_DATE, GET_START_DATEV2, GET_START_DATE_WAREHOUSE -> {
                         if (!utilService.checkBADate(callBackData) && !utilService.getMonth(update)) {
                             state = BotState.SAVE_START_DATE;
                         } else if (utilService.checkBADate(callBackData)) {
@@ -121,7 +123,7 @@ public class WebhookService {
             case GET_PRODUCT -> botService.Employee(message);
             case SEND_AGREED_MONEY, SEND_REJECTED_MONEY -> botService.sendCheckingMoney(state, message);
             case SAVE_NAME -> botService.saveName(message, chatId);
-            case GET_START_DATE, GET_START_DATEV2 -> botService.sendStartDate(state, chatId);
+            case GET_START_DATE, GET_START_DATEV2, GET_START_DATE_WAREHOUSE -> botService.sendStartDate(state, chatId);
             case SEND_CALENDAR -> botService.sendStartDateAsCalendar(message, chatId);
             case REPORTS, SEND_BY_MONTH, SEND_BY_DAY, SEND_BY_WEEK, SEND_BY_LAST_MONTH, SEND_BY_SEASON, SEND_BY_YEAR -> botService.getReport(state, chatId, messageId, callBackData);
             case SAVE_START_DATE-> botService.saveStartDate(message, chatId, callBackData);
