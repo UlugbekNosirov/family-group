@@ -2,7 +2,6 @@ package uz.dataFin.notificationbot.helper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -11,11 +10,12 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import uz.dataFin.notificationbot.model.Market;
 import uz.dataFin.notificationbot.model.Products;
+import uz.dataFin.notificationbot.model.SearchDTO;
 import uz.dataFin.notificationbot.model.WarehouseDTO;
 import uz.dataFin.notificationbot.service.*;
+import uz.dataFin.notificationbot.utils.BotState;
 import uz.dataFin.notificationbot.utils.Constant;
 
-import java.security.Key;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,6 +29,7 @@ public class Keyboard {
     private final ProductService productService;
     private final Api1CService api1CService;
     private final UtilService utilService;
+    private final WarehouseService warehouseService;
     private final String months[] = {"Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktyabr", "Noyabr", "Dekabr"};
 
     public InlineKeyboardMarkup createInlineMarkupForMarkets() {
@@ -161,24 +162,27 @@ public class Keyboard {
         KeyboardRow row2 = new KeyboardRow();
         KeyboardRow row3 = new KeyboardRow();
         KeyboardRow row4 = new KeyboardRow();
+        KeyboardRow row5 = new KeyboardRow();
         List<KeyboardRow> rowList = new ArrayList<>();
         markup.setOneTimeKeyboard(false);
         markup.setResizeKeyboard(true);
         markup.setSelective(true);
-        if (role.equals("ADMIN")){
+        if (role.equals("Admin")){
             row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.WAREHOUSE)));
             row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.TRADE)));
             row4.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.ACCOUNT_DEBT)));
             row4.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.CASH_BOX)));
+            row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.COST)));
             rowList.add(row3);
             rowList.add(row4);
         }
         row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA)));
         row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA_TOVAR)));
         row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BALANCE)));
-        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.SETTINGS)));
+        row5.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.SETTINGS)));
         rowList.add(row);
         rowList.add(row2);
+        rowList.add(row5);
         markup.setKeyboard(rowList);
         return markup;
     }
@@ -186,45 +190,21 @@ public class Keyboard {
     public ReplyKeyboard wareHouse(String chatId) {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
         List<KeyboardRow> rowList = new ArrayList<>();
-        KeyboardRow row1 = new KeyboardRow();
-        row1.add(new KeyboardButton("Faqat davr filtri bilan hisobiotni ko'rish"));
         markup.setOneTimeKeyboard(false);
         markup.setResizeKeyboard(true);
         markup.setSelective(true);
-        WarehouseDTO[] warehouseDTO = api1CService.getWarehouses(chatId);
+        WarehouseDTO[] warehouseDTO = api1CService.getWarehouses(chatId, "warehouse");
         for (WarehouseDTO dto : warehouseDTO) {
             KeyboardRow row = new KeyboardRow();
+            dto.setIsBranch(Boolean.FALSE);
+            warehouseService.saveOrNONE(dto);
             row.add(new KeyboardButton(dto.getName()));
             rowList.add(row);
         }
         KeyboardRow row = new KeyboardRow();
-        row.add(new KeyboardButton("\uD83D\uDD19Orqaga"));
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BACK)));
         row.add(new KeyboardButton("Tovar tanlash"));
         rowList.add(row);
-        return null;
-    }
-    public ReplyKeyboardMarkup reportBtn(String chatId) {
-        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
-        KeyboardRow row = new KeyboardRow();
-        KeyboardRow row2 = new KeyboardRow();
-        KeyboardRow row3 = new KeyboardRow();
-        KeyboardRow row4 = new KeyboardRow();
-        List<KeyboardRow> rowList = new ArrayList<>();
-        markup.setOneTimeKeyboard(false);
-        markup.setResizeKeyboard(true);
-        markup.setSelective(true);
-        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA)));
-        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA)));
-        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.ACCOUNT_DEBT)));
-        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.WAREHOUSE)));
-        row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.COST)));
-        row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.TRADE)));
-        row4.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BALANCE)));
-        row4.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.SETTINGS)));
-        rowList.add(row);
-        rowList.add(row2);
-        rowList.add(row3);
-        rowList.add(row4);
         markup.setKeyboard(rowList);
         return markup;
     }
@@ -381,4 +361,145 @@ public class Keyboard {
     }
 
 
+    public ReplyKeyboard chooseProduct(String chatId) {
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
+        KeyboardRow row = new KeyboardRow();
+        KeyboardRow row2 = new KeyboardRow();
+        KeyboardRow row3 = new KeyboardRow();
+        List<KeyboardRow> rowList = new ArrayList<>();
+        markup.setOneTimeKeyboard(false);
+        markup.setResizeKeyboard(true);
+        markup.setSelective(true);
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.PRODUCT_GROUP)));
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.ALL_PRODUCT_GROUP)));
+        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.PRODUCT)));
+        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.NO_FILTR_PRODUCT)));
+        row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)));
+        rowList.add(row);
+        rowList.add(row2);
+        rowList.add(row3);
+        markup.setKeyboard(rowList);
+        return markup;
+    }
+
+    public ReplyKeyboard productGroup(BotState state, String chatId, SearchDTO searchDTO) {
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> rowList = new ArrayList<>();
+        markup.setOneTimeKeyboard(false);
+        markup.setResizeKeyboard(true);
+        markup.setSelective(true);
+        SearchDTO[] productGroup = api1CService.getProductGroup(state, searchDTO);
+
+        for (SearchDTO dto : productGroup) {
+            KeyboardRow row = new KeyboardRow();
+            row.add(new KeyboardButton(dto.getName()));
+            rowList.add(row);
+        }
+
+        KeyboardRow paginationRow = new KeyboardRow();
+        if (searchDTO.getPage() > 0) {
+            paginationRow.add(new KeyboardButton("<<--"));
+        }
+        if (9 < productGroup.length) {
+            paginationRow.add(new KeyboardButton("-->>"));
+        }
+        rowList.add(paginationRow);
+        KeyboardRow row = new KeyboardRow();
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.NO_FILTR_PRODUCT)));
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)));
+        rowList.add(row);
+        markup.setKeyboard(rowList);
+        return markup;
+    }
+
+    public ReplyKeyboardMarkup getAllGroupOfProducts(BotState state, String chatId) {
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> rowList = new ArrayList<>();
+        markup.setOneTimeKeyboard(false);
+        markup.setResizeKeyboard(true);
+        markup.setSelective(true);
+        KeyboardRow row = new KeyboardRow();
+        KeyboardRow row1 = new KeyboardRow();
+        if (state == BotState.GET_BY_PRODUCT_GROUP) {
+            row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.ALL_PRODUCT_GROUP)));
+        }
+        row1.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)));
+        rowList.add(row);
+        rowList.add(row1);
+        markup.setKeyboard(rowList);
+        return markup;
+    }
+
+    public ReplyKeyboardMarkup cashBox(String chatId) {
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> rowList = new ArrayList<>();
+        markup.setOneTimeKeyboard(false);
+        markup.setResizeKeyboard(true);
+        markup.setSelective(true);
+        WarehouseDTO[] warehouseDTO = api1CService.getWarehouses(chatId, "cashbox");
+        for (WarehouseDTO dto : warehouseDTO) {
+            KeyboardRow row = new KeyboardRow();
+            dto.setIsBranch(Boolean.FALSE);
+            warehouseService.saveOrNONE(dto);
+            row.add(new KeyboardButton(dto.getName()));
+            rowList.add(row);
+        }
+        KeyboardRow row = new KeyboardRow();
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BACK)));
+        rowList.add(row);
+        markup.setKeyboard(rowList);
+        return markup;
+    }
+
+    public ReplyKeyboardMarkup branch(String chatId) {
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> rowList = new ArrayList<>();
+        markup.setOneTimeKeyboard(false);
+        markup.setResizeKeyboard(true);
+        markup.setSelective(true);
+        WarehouseDTO[] warehouseDTO = api1CService.getWarehouses(chatId, "branch");
+        for (WarehouseDTO dto : warehouseDTO) {
+            KeyboardRow row = new KeyboardRow();
+            dto.setIsBranch(Boolean.TRUE);
+            warehouseService.saveOrNONE(dto);
+            row.add(new KeyboardButton(dto.getName()));
+            rowList.add(row);
+        }
+        KeyboardRow row = new KeyboardRow();
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BACK)));
+        rowList.add(row);
+        markup.setKeyboard(rowList);
+        return markup;
+    }
+
+    public ReplyKeyboardMarkup typeContractor(String chatId) {
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> rowList = new ArrayList<>();
+        markup.setOneTimeKeyboard(false);
+        markup.setResizeKeyboard(true);
+        markup.setSelective(true);
+        KeyboardRow row = new KeyboardRow();
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.CLIENT)));
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.POSTAVSHIK)));
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.ALL)));
+        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)));
+        rowList.add(row);
+        rowList.add(row2);
+        markup.setKeyboard(rowList);
+        return markup;
+    }
+
+    public ReplyKeyboard getContractors(String chatId) {
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
+        KeyboardRow row3 = new KeyboardRow();
+        List<KeyboardRow> rowList = new ArrayList<>();
+        markup.setOneTimeKeyboard(false);
+        markup.setResizeKeyboard(true);
+        markup.setSelective(true);
+        row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)));
+        rowList.add(row3);
+        markup.setKeyboard(rowList);
+        return markup;
+    }
 }

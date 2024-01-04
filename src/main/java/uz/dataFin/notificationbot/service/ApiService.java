@@ -46,29 +46,4 @@ public class ApiService {
         botService.sendMessageToUser(messageDTO, username);
     }
 
-
-    public ReportDTO wareHouse(DateDTO dateDTO) {
-        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth(Security.LOGIN, Security.PASSWORD, StandardCharsets.UTF_8);
-            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-            HttpEntity<DateDTO> entity = new HttpEntity<>(dateDTO, headers);
-
-            ResponseEntity<byte[]> response = restTemplate
-                    .setConnectTimeout(Duration.ofSeconds(60))
-                    .setReadTimeout(Duration.ofSeconds(60))
-                    .build()
-                    .exchange(Constant.REQUEST_URI +"/bot/reports", HttpMethod.POST, entity, byte[].class);
-            byte[] responseBody = response.getBody();
-            Path path= Paths.get("REPORTS");
-            path=utilService.checkPackage(path);
-            Files.write(Paths.get(path.toFile().getAbsolutePath()+"/report."+dateDTO.getTypeFile()), Objects.requireNonNull(response.getBody()));
-            return new File(path.toFile().getAbsolutePath()+"/report."+dateDTO.getTypeFile());
-        }catch (Exception e){
-            System.out.println(LocalDate.now()+" "+dateDTO.getClientId()+", "+", File qabul qilib olishda xatolik, fileService.getReports");
-        }
-        return null;
-    }
-
 }

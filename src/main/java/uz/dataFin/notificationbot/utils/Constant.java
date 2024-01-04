@@ -17,7 +17,7 @@ public interface Constant {
     String ERROR_500 = "Сервер билан хатолик юз берди ботСервиcе.сенд404/Произошла ошибка с сервером botService.send404/Server bilan xatolik yuz berdi botService.send404";
     String ERROR_CHOOSE_DATE = "❌Давр танлашда хатолик юз берди!\nЖараённи қайтадан бошланг.../❌Ошибка в выборе периода!\nЗапускаем процесс заново.../❌Davr tanlashda xatolik yuz berdi!\nJarayonni qaytadan boshlang...";
     String CHOOSE_FORMAT = "Маълумотларни қайси форматда қабул қилмоқчисиз?/В каком формате вы хотите получить данные?/Ma’lumotlarni qaysi formatda qabul qilmoqchisiz?";
-    String AKT_SVERKA = "\uD83D\uDCC5АКТ СВEРКА/\uD83D\uDCC5АКТ СВEРКА/\uD83D\uDCC5AKT SVERKA";
+    String AKT_SVERKA = "\uD83D\uDCC5AKT СВEРКА/\uD83D\uDCC5AKT СВEРКА/\uD83D\uDCC5AKT SVERKA";
     String AKT_SVERKA_TOVAR = "\uD83D\uDCC5АКТ СВEРКА (товар)/\uD83D\uDCC5АКТ СВЕРКА (товары)/\uD83D\uDCC5AKT SVERKA (tovar)";
     String BALANCE = "\uD83D\uDCB0БАЛАНС/\uD83D\uDCB0 БАЛАНС/\uD83D\uDCB0 BALANS";
     String TODAY = "Бугунги кун/Сегодня/Bugungi kun";
@@ -28,6 +28,7 @@ public interface Constant {
     String OTHER = "Бошқа.../Другой.../Boshqa...";
     String CHOOSE_START_DATE = "Бошланғич санани танланг.../Выберите дату начала.../Boshlang‘ich sanani tanlang...";
     String START_DATE = "⏰Бошланғич сана -> /⏰Дата начала -> /⏰Boshlang‘ich sana -> ";
+    String PERIOD = "⏰Давр -> /⏰Дата -> /⏰Davr -> ";
     String END_DATE = "⏰Охирги сана -> /⏰Дата конец -> /⏰Oxirgi sana -> ";
     String CHOOSE_END_DATE = "Охирги сана танланг.../Выберите дату конец.../Oxirgi sana tanlang...";
     String SETTINGS = "⚙️Созламалар/⚙️Настройки/⚙️Sozlamalar";
@@ -50,5 +51,23 @@ public interface Constant {
     String COST = "Харажат/Расход/Xarajat";
     String TRADE = "Савдо/Продажа/Savdo";
     String CHOOSE_WAREHOUSE = "Омборни танланг.../Выберите склад.../Omborni tanlang...";
+    String CHOOSE_CASH_BOX = "Кассани танланг.../Выберите кассу.../Kassani tanlang...";
+    String PRODUCT_GROUP = "\uD83D\uDCC2Махсулотлар гуруҳи/\uD83D\uDCC2Группа товаров/\uD83D\uDCC2Maxsulotlar guruhi";
+    String PRODUCT = "Товар бўйича излаш/Поиск по продукту/Tovar bo`yicha izlash";
+    String NO_FILTR_PRODUCT = "Барчасини кўриш/Увидеть все/Barchasini ko`rish";
+    String ENTER_PRODUCT = "Товар номини киритинг(ёки ўхшаш ном).../Введите название продуктов (или похожее название).../Tovar nomini kiriting(yoki o`xshash nom)...";
+    String ENTER_PRODUCT_GROUP = "Товар группасининг таҳминий номини киритинг\n\nЁки қуйидаги буйруқлардан бирини танланг.../Введите примерное название группы товаров \n\nИли выберите одну из команд ниже.../Tovar gruppasining tahminiy nomini kiriting\n\nYoki quyidagi buyruqlardan birini tanlang)...";
+    String ENTER_CONTRACTOR = "Контрагент номини киритинг(ёки ўхшаш ном).../Введите название контрагентов (или похожее название).../Klient nomini kiriting(yoki o`xshash nom)...";
+    String CHOOSE_PRODUCT_GROUP = "Товар группаси номини танланг.../Выберите название группы продуктов .../Tovar gruppasi nomini tanlang...";
+    String CHOOSE_CONTRACTOR = "Контрагент номини танланг.../Выберите название контрагентов .../Klient nomini tanlang...";
+    String ALL_PRODUCT_GROUP = "Барча гуруҳларни кўрсатиш/Показать все группы/Barcha guruhlarni ko`rsatish";
+    String BACK_STATE = "🔙Орқага/🔙Назад/🔙Orqaga";
+    String PRODUCT_NAME = "Товар :/Продукт: /Tovar :";
+    String CASHBOX_NAME = "Касса :/Касса: /Kassa :";
+    String BRANCH_NAME = "Филиал :/Филиал: /Filial :";
     String REQUEST_URI = "http://91.219.62.18/xonchiroq_test/hs";
+    String CLIENT = "Клиент/Клиент/Klient";
+    String POSTAVSHIK = "Поставщик/Поставщик/Yetkazib beruvchi";
+    String ALL = "Хаммаси/Всех/Hammasi";
+    String NO_INFO = "Танланган буйруқлар бўйича маълумот топилмади!/Для выбранных команд информация не найдена!/Tanlangan buyruqlar bo'yicha ma'lumot topilmadi!";
 }

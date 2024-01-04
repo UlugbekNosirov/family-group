@@ -105,7 +105,6 @@ public class UserService {
     }
 
 
-
     public String getRole(String chatId){
         Optional<Users> roleByChatId = userRepository.findRoleByChatId(chatId);
         if (roleByChatId.isPresent()){
@@ -181,8 +180,7 @@ public class UserService {
         return "No name!";
     }
 
-    public BotState getState(Update update) {
-        String chatId = utilService.getChatIdFromUpdate(update);
+    public BotState getState(String chatId) {
         Optional<Users> user = userRepository.findByChatId(chatId);
         return user.map(Users::getState).orElse(null);
     }

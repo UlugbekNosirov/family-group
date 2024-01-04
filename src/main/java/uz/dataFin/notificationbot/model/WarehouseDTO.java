@@ -3,6 +3,7 @@ package uz.dataFin.notificationbot.model;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 
 @AllArgsConstructor
@@ -10,9 +11,24 @@ import javax.persistence.Entity;
 @Getter
 @Setter
 @Entity
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class WarehouseDTO extends BaseModel {
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class WarehouseDTO extends BaseModel{
+
     String name;
-    String id;
+
+    String uniqueID;
+
+    Integer code;
+
+    Boolean isBranch;
+
+
+    public WarehouseDTO(String name, String uniqueID, Boolean isBranch){
+        this.name = name;
+        this.uniqueID = uniqueID;
+        this.isBranch = isBranch;
+    }
+
+
 }
