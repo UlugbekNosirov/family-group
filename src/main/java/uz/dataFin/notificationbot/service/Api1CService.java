@@ -33,6 +33,7 @@ import java.util.Objects;
 public class Api1CService {
     private final TelegramFeign feign;
     private final UtilService utilService;
+    private final UserService userService;
 
 
     public WarehouseDTO[] getWarehouses(String chatId, String uri) {
@@ -147,9 +148,17 @@ public class Api1CService {
         } else if (reportDTO.getTypeReport().equals("CASH_BOX")) {
             fullUri = fullUri + "/cashbox";
         } else if (reportDTO.getTypeReport().equals(utilService.getTextByLanguage(reportDTO.getClientId(), Constant.AKT_SVERKA))) {
-            fullUri = fullUri + "/sverka";
+            if (userService.getRole(reportDTO.getClientId()).equals("Contractor")){
+                return getReportContractor(reportDTO);
+            }else {
+                fullUri = fullUri + "/sverka";
+            }
         } else if (reportDTO.getTypeReport().equals(utilService.getTextByLanguage(reportDTO.getClientId(), Constant.AKT_SVERKA_TOVAR))) {
-            fullUri = fullUri + "/sverka/product";
+            if (userService.getRole(reportDTO.getClientId()).equals("Contractor")){
+                return getReportContractor(reportDTO);
+            }else {
+                fullUri = fullUri + "/sverka/product";
+            }
         } else if (reportDTO.getTypeReport().equals("DC")) {
             fullUri = fullUri + "/dc";
         }else if (reportDTO.getTypeReport().equals("COST")) {
@@ -175,6 +184,55 @@ public class Api1CService {
             System.out.println(LocalDate.now()+" "+reportDTO.getClientId()+", "+", File qabul qilib olishda xatolik, fileService.getReports");
         }
         return null;
+    }
+
+    private File getReportContractor(ReportDTO reportDTO) {
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        DateDTO dateDTO = DateDTO.builder()
+                .methodType("REPORT")
+                .startDate(reportDTO.getStartDate())
+                .endDate(reportDTO.getEndDate())
+                .contractorId(reportDTO.getClientId())
+                .typeFile(reportDTO.getTypeFile())
+                .reportId((reportDTO.getTypeReport().equals(utilService.getTextByLanguage(reportDTO.getClientId(), Constant.AKT_SVERKA))) ? 1 : 2).build();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth(Security.LOGIN, Security.PASSWORD, StandardCharsets.UTF_8);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            HttpEntity<DateDTO> entity = new HttpEntity<>(dateDTO, headers);
+
+            ResponseEntity<byte[]> response = restTemplate
+                    .setConnectTimeout(Duration.ofSeconds(60))
+                    .setReadTimeout(Duration.ofSeconds(60))
+                    .build()
+                    .exchange(Constant.REQUEST_URI + "/bot/reports", HttpMethod.POST, entity, byte[].class);
+            Path path = Paths.get("REPORTS");
+            path = utilService.checkPackage(path);
+            Files.write(Paths.get(path.toFile().getAbsolutePath() + "/report." + reportDTO.getTypeFile()), Objects.requireNonNull(response.getBody()));
+            return new File(path.toFile().getAbsolutePath() + "/report." + reportDTO.getTypeFile());
+        } catch (Exception e) {
+            System.out.println(LocalDate.now() + " " + reportDTO.getClientId() + ", " + ", File qabul qilib olishda xatolik, fileService.getReports");
+        }
+        return null;
+    }
+
+    public void saveClient(Users user) {
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth(Security.LOGIN, Security.PASSWORD, StandardCharsets.UTF_8);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            HttpEntity<Users> entity = new HttpEntity<>(user, headers);
+
+            ResponseEntity<byte[]> response = restTemplate
+                    .setConnectTimeout(Duration.ofSeconds(60))
+                    .setReadTimeout(Duration.ofSeconds(60))
+                    .build()
+                    .exchange(Constant.REQUEST_URI + "/bot/save/client", HttpMethod.POST, entity, byte[].class);
+        } catch (Exception e) {
+            System.out.println(LocalDate.now() + " " + user.getChatId() + ", " + ", User yaratishda xatolik");
+        }
     }
 }
 

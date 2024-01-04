@@ -41,20 +41,19 @@ public class UserService {
         getRoleInURL(chatId);
         if (optionalUser.isPresent() && dateDTO.isPresent() && optionalUser.get().getPhone() != null) {
             return new UserDTO(optionalUser.get().getState());
-        }else {
-            if (dateDTO.isEmpty()) {
-                LocalDate currentDate = LocalDate.now();
-                currentDate.getMonth();
-                LocalDate lastDayOfMonthDate = currentDate.withDayOfMonth(
-                        currentDate.getMonth().length(currentDate.isLeapYear()));
-                DateDTO DTO = new DateDTO(update.getMessage().getFrom().getFirstName(), update.getMessage().getChatId().toString(), 1, "REPORT", LocalDate.now().toString(), lastDayOfMonthDate.toString(), "", "pdf");
-                fileRepository.save(DTO);
-            }
-            if (optionalUser.isEmpty()) {
-                saveChosenMarket(update, 1);
-            }
         }
-        return new UserDTO(optionalUser.get().getState());
+        if (dateDTO.isEmpty()) {
+            LocalDate currentDate = LocalDate.now();
+            currentDate.getMonth();
+            LocalDate lastDayOfMonthDate = currentDate.withDayOfMonth(
+                    currentDate.getMonth().length(currentDate.isLeapYear()));
+            DateDTO DTO = new DateDTO(update.getMessage().getFrom().getFirstName(), update.getMessage().getChatId().toString(), chatId, 1, "REPORT", LocalDate.now().toString(), lastDayOfMonthDate.toString(), "", "pdf");
+            fileRepository.save(DTO);
+        }
+        if (optionalUser.isEmpty()) {
+            saveChosenMarket(update, 1);
+        }
+        return new UserDTO(userRepository.findByChatId(chatId).get().getState());
     }
 
     public String getRoleInURL(String chatId){

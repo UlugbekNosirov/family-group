@@ -33,19 +33,21 @@ public class WebhookService {
                 String text = message.getText();
                 if (text.equals("/start")) {
                     state = BotState.SEND_PHONE;
+                } else if (utilService.containsSpecialCharacters(message.getFrom().getFirstName()) && state == BotState.SEND_PHONE) {
+                    state = BotState.SAVE_NAME;
                 } else if (text.equals("Tovar tanlash")) {
                     state = BotState.SAVE_WAREHOUSE;
-                } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)) && state==BotState.SAVE_WAREHOUSE) {
+                } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)) && state == BotState.SAVE_WAREHOUSE) {
                     state = BotState.SEND_WAREHOUSE_BACK;
-                } else if (reportService.getReportDto(chatId).getTypeReport().startsWith("\uD83D\uDCC5AKT") && state==BotState.SAVE_WAREHOUSE) {
+                } else if (reportService.getReportDto(chatId).getTypeReport().startsWith("\uD83D\uDCC5AKT") && state == BotState.SAVE_WAREHOUSE) {
                     state = BotState.GET_CONTRACTOR_IN_API;
-                } else if (state == BotState.GET_CONTRACTOR_IN_API && text.equals(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)) ) {
+                } else if (state == BotState.GET_CONTRACTOR_IN_API && text.equals(utilService.getTextByLanguage(chatId, Constant.BACK_STATE))) {
                     state = BotState.GET_CONTRACTOR_IN_API;
                 } else if (state == BotState.GET_CONTRACTOR_IN_API && api1CService.haveProductGroup(state, new SearchDTO(chatId, searchRepository.findByChatId(chatId).get().getBranchID(), text, 1, 200))) {
                     state = BotState.GET_REPORT_SVERKA;
-                } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)) && state==BotState.GET_BY_PRODUCT_GROUP) {
+                } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)) && state == BotState.GET_BY_PRODUCT_GROUP) {
                     state = BotState.SAVE_WAREHOUSE;
-                } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)) && state==BotState.GET_BY_PRODUCT) {
+                } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)) && state == BotState.GET_BY_PRODUCT) {
                     state = BotState.SAVE_WAREHOUSE;
                 } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.SETTINGS))) {
                     state = BotState.SEND_BTN_SETTING;
@@ -89,7 +91,7 @@ public class WebhookService {
                     state = BotState.GET_PRODUCT_GROUP_IN_API;
                 } else if (text.equals("-->>") || text.equals("<<--")) {
                     state = BotState.NEXT;
-                } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.CLIENT)) || text.equals(utilService.getTextByLanguage(chatId, Constant.POSTAVSHIK))|| text.equals(utilService.getTextByLanguage(chatId, Constant.ALL))) {
+                } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.CLIENT)) || text.equals(utilService.getTextByLanguage(chatId, Constant.POSTAVSHIK)) || text.equals(utilService.getTextByLanguage(chatId, Constant.ALL))) {
                     state = BotState.GET_ACCOUNT_DEBT;
                 } else if (state == BotState.GET_PRODUCT_GROUP_IN_API && message.getText().equals(utilService.getTextByLanguage(chatId, Constant.BACK_STATE))) {
                     state = BotState.SAVE_WAREHOUSE;
@@ -195,7 +197,8 @@ public class WebhookService {
             case GET_BY_PRODUCT_GROUP, GET_BY_PRODUCT -> botService.getByProductGroup(state, chatId);
             case GET_REPORT_WAREHOUSE, NO_FILTR_PRODUCT_GROUP, NO_FILTR_PRODUCT,
                     GET_REPORT_WAREHOUSE_BY_PRODUCT -> botService.getReportWarehouse(state, chatId, message);
-            case GET_PRODUCT_GROUP_IN_API, GET_PRODUCT_IN_API, GET_CONTRACTOR_IN_API -> botService.getByProductGroupByAPI(state, chatId, message);
+            case GET_PRODUCT_GROUP_IN_API, GET_PRODUCT_IN_API, GET_CONTRACTOR_IN_API ->
+                    botService.getByProductGroupByAPI(state, chatId, message);
             case GET_REPORT_SVERKA -> botService.getReportSVERKA(chatId, message);
             case GET_ACCOUNT_DEBT -> botService.getAccountDebt(chatId, message);
             case GET_BALANCE -> botService.getBalance(chatId);

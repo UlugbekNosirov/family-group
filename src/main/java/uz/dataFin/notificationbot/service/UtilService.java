@@ -187,7 +187,7 @@ public class UtilService {
         return true;
     }
 
-    public static boolean containsSpecialCharacters(String text) {
+    public boolean containsSpecialCharacters(String text) {
         String lowerCase = text.toLowerCase();
         for (char c : lowerCase.toCharArray()) {
             if (words.indexOf(c) == -1) {

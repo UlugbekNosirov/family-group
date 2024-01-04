@@ -81,7 +81,7 @@ public class BotService {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
         String name = userService.getName(chatId);
-        if (UtilService.containsSpecialCharacters(name)) {
+        if (utilService.containsSpecialCharacters(name)) {
             sendName(chatId);
         } else if (!getPhone(chatId)) {
             sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.REGISTRATION));
@@ -102,6 +102,7 @@ public class BotService {
     }
 
     public void getRole(String chatId) {
+        api1CService.saveClient(userService.getByChatId(chatId));
         String role = userService.getRole(chatId);
         switch (role) {
             case "Employee" -> {
@@ -254,6 +255,7 @@ public class BotService {
             if (role.equals("Contractor")) {
                 sendAllDate(chatId, messageId);
                 sendReport(chatId, messageId);
+                return;
             }
             if (role.equals("Admin") && reportService.getReportDto(chatId).getTypeReport().startsWith("\uD83D\uDCC5AKT")) {
                 sendAllDate(chatId, messageId);
@@ -549,31 +551,13 @@ public class BotService {
 
 
     public void saveName(Message message, String chatId) {
-        String name = userService.getName(chatId);
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
-        if (UtilService.containsSpecialCharacters(name)) {
-            userService.saveUserName(message, chatId);
-        }
+        userService.saveUserName(message, chatId);
         if (!getPhone(chatId)) {
             sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.REGISTRATION));
             sendMessage.setReplyMarkup(keyboard.createContactMarkup());
             feign.sendMessage(sendMessage);
-        }
-        if (message.getText().equals(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA))) {
-            sendStartDate(BotState.GET_START_DATEV2, chatId);
-            return;
-        }
-        if (message.getText().equals(utilService.getTextByLanguage(chatId, Constant.BALANCE))) {
-            getBalance(chatId);
-            return;
-        }
-        if (message.getText().equals(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA_TOVAR))) {
-            sendStartDate(BotState.GET_START_DATE, chatId);
-            return;
-        }
-        if (UtilService.containsOnlyNumbers(message.getText())) {
-            Employee(message);
         }
     }
 
