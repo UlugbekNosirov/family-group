@@ -55,21 +55,15 @@ public class Keyboard {
     public InlineKeyboardMarkup typeFileButtons(String chatId) {
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         List<InlineKeyboardButton> row = new ArrayList<>();
-        List<InlineKeyboardButton> row2 = new ArrayList<>();
-        InlineKeyboardButton btn1 = new InlineKeyboardButton();
-        btn1.setText(utilService.getTextByLanguage(chatId, Constant.IMAGE));
-        btn1.setCallbackData("jpg");
         InlineKeyboardButton btn2 = new InlineKeyboardButton();
         btn2.setText("Excel");
         btn2.setCallbackData("xlsx");
         InlineKeyboardButton btn3 = new InlineKeyboardButton();
         btn3.setText("Pdf");
         btn3.setCallbackData("pdf");
-        row.add(btn1);
         row.add(btn2);
-        row2.add(btn3);
+        row.add(btn3);
         rowList.add(row);
-        rowList.add(row2);
         return new InlineKeyboardMarkup(rowList);
     }
 
@@ -84,7 +78,7 @@ public class Keyboard {
         btn2.setText("\uD83C\uDDF7\uD83C\uDDFAРусский");
         btn2.setCallbackData("ru");
         InlineKeyboardButton btn3 = new InlineKeyboardButton();
-        btn3.setText("\uD83C\uDDFA\uD83C\uDDFF/\uD83C\uDDF7\uD83C\uDDFAКрилча");
+        btn3.setText("\uD83C\uDDFA\uD83C\uDDFF/\uD83C\uDDF7\uD83C\uDDFAКириллча");
         btn3.setCallbackData("kril");
         row.add(btn1);
         row.add(btn2);
@@ -145,8 +139,8 @@ public class Keyboard {
         return new InlineKeyboardMarkup(rowList);
     }
 
-    public ReplyKeyboardMarkup createContactMarkup() {
-        KeyboardButton contactBtn = new KeyboardButton(Constant.MY_PHONE_NUMBER);
+    public ReplyKeyboardMarkup createContactMarkup(String chatId) {
+        KeyboardButton contactBtn = new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.MY_PHONE_NUMBER));
         contactBtn.setRequestContact(true);
         return new ReplyKeyboardMarkup(List.of(new KeyboardRow(List.of(contactBtn))), true, false, true, "next");
     }
@@ -163,31 +157,33 @@ public class Keyboard {
         KeyboardRow row3 = new KeyboardRow();
         KeyboardRow row4 = new KeyboardRow();
         KeyboardRow row5 = new KeyboardRow();
+        KeyboardRow row6 = new KeyboardRow();
         List<KeyboardRow> rowList = new ArrayList<>();
         markup.setOneTimeKeyboard(false);
         markup.setResizeKeyboard(true);
         markup.setSelective(true);
         if (role.equals("Admin")){
-            row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.WAREHOUSE)));
-            row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.TRADE)));
-            row4.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.ACCOUNT_DEBT)));
-            row4.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.CASH_BOX)));
-            row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.COST)));
+            row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.WAREHOUSE_BTN)));
+            row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.CASH_BOX)));
+//            row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.TRADE)));
+            row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.ACCOUNT_DEBT)));
+            row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA)));
+            row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.COST)));
+            row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.TRADE_ALKAN)));
+            row4.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.CASH_BOX_SMENA)));
+            row4.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.SETTINGS)));
+            rowList.add(row);
+            rowList.add(row2);
             rowList.add(row3);
             rowList.add(row4);
         }
-        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA)));
-        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA_TOVAR)));
-        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BALANCE)));
-        row5.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.SETTINGS)));
-        rowList.add(row);
-        rowList.add(row2);
-        rowList.add(row5);
+//        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA_TOVAR)));
+//        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BALANCE)));
         markup.setKeyboard(rowList);
         return markup;
     }
 
-    public ReplyKeyboard wareHouse(String chatId) {
+    public ReplyKeyboardMarkup wareHouse(String chatId) {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
         List<KeyboardRow> rowList = new ArrayList<>();
         markup.setOneTimeKeyboard(false);
@@ -203,7 +199,7 @@ public class Keyboard {
         }
         KeyboardRow row = new KeyboardRow();
         row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BACK)));
-        row.add(new KeyboardButton("Tovar tanlash"));
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.CHOOSE_PRODUCT)));
         rowList.add(row);
         markup.setKeyboard(rowList);
         return markup;
@@ -361,7 +357,7 @@ public class Keyboard {
     }
 
 
-    public ReplyKeyboard chooseProduct(String chatId) {
+    public ReplyKeyboardMarkup chooseProduct(String chatId) {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
         KeyboardRow row = new KeyboardRow();
         KeyboardRow row2 = new KeyboardRow();
@@ -382,7 +378,7 @@ public class Keyboard {
         return markup;
     }
 
-    public ReplyKeyboard productGroup(BotState state, String chatId, SearchDTO searchDTO) {
+    public ReplyKeyboardMarkup groupElements(BotState state, String chatId, SearchDTO searchDTO) {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
         List<KeyboardRow> rowList = new ArrayList<>();
         markup.setOneTimeKeyboard(false);
@@ -405,7 +401,9 @@ public class Keyboard {
         }
         rowList.add(paginationRow);
         KeyboardRow row = new KeyboardRow();
-        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.NO_FILTR_PRODUCT)));
+        if (state != BotState.GET_CONTRACTORS) {
+            row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.NO_FILTR_PRODUCT)));
+        }
         row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)));
         rowList.add(row);
         markup.setKeyboard(rowList);
@@ -479,18 +477,18 @@ public class Keyboard {
         markup.setResizeKeyboard(true);
         markup.setSelective(true);
         KeyboardRow row = new KeyboardRow();
-        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.CLIENT)));
+        row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.CLIENT_FOR_KEYBOARD)));
         row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.POSTAVSHIK)));
         KeyboardRow row2 = new KeyboardRow();
-        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.ALL)));
         row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BACK_STATE)));
+        row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.ALL)));
         rowList.add(row);
         rowList.add(row2);
         markup.setKeyboard(rowList);
         return markup;
     }
 
-    public ReplyKeyboard getContractors(String chatId) {
+    public ReplyKeyboardMarkup getContractors(String chatId) {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
         KeyboardRow row3 = new KeyboardRow();
         List<KeyboardRow> rowList = new ArrayList<>();

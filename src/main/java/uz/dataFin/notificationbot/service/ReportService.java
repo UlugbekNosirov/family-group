@@ -30,6 +30,7 @@ public class ReportService {
     private final UtilService utilService;
     private final SearchRepository searchRepository;
     private final Api1CService api1CService;
+    private final UserService userService;
 
     public void saveStartDate(String userId, String startDate) {
         Optional<ReportDTO> reportDTO = reportRepository.findByClientId(userId);
@@ -47,14 +48,15 @@ public class ReportService {
         }
     }
 
-    public SearchDTO saveSearch(BotState state, String userId, String search) {
+    public SearchDTO saveSearch(String userId, String branchId, String search) {
         Optional<SearchDTO> searchDTO = searchRepository.findByChatId(userId);
         if (searchDTO.isPresent()) {
             searchDTO.get().setSearch(search);
+            searchDTO.get().setBranchID(branchId);
+            searchDTO.get().setPage(1);
+            searchDTO.get().setPageSize(10);
             return searchRepository.save(searchDTO.get());
         } else {
-            if (state == BotState.GET_PRODUCT_IN_API)
-                return searchRepository.save(new SearchDTO(userId, search, 1, 10));
             return searchRepository.save(new SearchDTO(userId, search, 1, 10));
         }
     }
@@ -78,7 +80,7 @@ public class ReportService {
 
     public ReportDTO getReportDto(String clientId) {
         Optional<ReportDTO> reportDTO = reportRepository.findByClientId(clientId);
-        return reportDTO.orElseGet(() -> reportRepository.save(new ReportDTO(clientId, "", "", "", "", "", "", "", "", 0, "", "")));
+        return reportDTO.orElseGet(() -> reportRepository.save(new ReportDTO(clientId, "", "", "","", "", "", "", "", "", 0, "", "")));
     }
 
 
@@ -112,15 +114,17 @@ public class ReportService {
         if (reportDTO.isEmpty()) {
             reportRepository.save(new ReportDTO(chatId, LocalDate.now().toString(), LocalDate.now().toString(), "pdf", typeReport));
         }else {
-            reportDTO.get().setTypeReport(typeReport);
-            reportRepository.save(reportDTO.get());
+            Optional<ReportDTO> reportDTO1 = reportRepository.findByClientId(chatId);
+            reportDTO1.get().setTypeReport(typeReport);
+            reportRepository.save(reportDTO1.get());
         }
+        userService.updateUserState(chatId, BotState.START);
     }
 
-    public void saveWareHouseId(String chatId, WarehouseDTO dto) {
+    public void saveWareHouseId(String chatId, String uniqueId) {
         Optional<ReportDTO> reportDTO = reportRepository.findByClientId(chatId);
         if (reportDTO.isPresent()) {
-            reportDTO.get().setWarehouseID(dto.getUniqueID());
+            reportDTO.get().setWarehouseID(uniqueId);
             reportRepository.save(reportDTO.get());
         }
     }
@@ -145,12 +149,19 @@ public class ReportService {
     }
 
     public ReportDTO saveClientId(String chatID, String text) {
-        SearchDTO[] productGroup = api1CService.getProductGroup(BotState.GET_CONTRACTOR_IN_API, searchRepository.findByChatId(chatID).get());
+
+        SearchDTO[] productGroup = api1CService.getProductGroup(BotState.GET_CONTRACTORS, searchRepository.findByChatId(chatID).get());
+
         Optional<ReportDTO> reportDTO = reportRepository.findByClientId(chatID);
+
         if (reportDTO.isPresent()) {
             try {
-                reportDTO.get().setContractorID(productGroup[0].getUniqueID());
-            } catch (Exception e) {
+
+                if (text.equals(utilService.getTextByLanguage(chatID, Constant.NO_FILTR_PRODUCT))) {reportDTO.get().setContractorID("");
+                }   else reportDTO.get().setContractorID(productGroup[0].getUniqueID());}
+
+            catch (Exception e) {
+
                 reportDTO.get().setContractorID("");
             }
             return reportRepository.save(reportDTO.get());
@@ -177,11 +188,9 @@ public class ReportService {
 
     public void saveBranchID(String chatId, String text) {
         Optional<ReportDTO> reportDTO = reportRepository.findByClientId(chatId);
-        Optional<SearchDTO> byChatId = searchRepository.findByChatId(chatId);
         if (reportDTO.isPresent()) {
             try {
                 reportDTO.get().setBranchID(text);
-                byChatId.get().setBranchID(text);
             } catch (Exception e) {
                 reportDTO.get().setBranchID("");
             }
@@ -193,6 +202,47 @@ public class ReportService {
         Optional<ReportDTO> reportDTO = reportRepository.findByClientId(chatId);
         if (reportDTO.isPresent()) {
             reportDTO.get().setTypeContractor(text);
+            reportRepository.save(reportDTO.get());
+        }
+    }
+
+    public SearchDTO getTankTankID(String chatId, String text) {
+        SearchDTO[] productGroup = api1CService.getProductGroup(BotState.GET_TANKS, new SearchDTO(chatId, text, 1, 200));
+        return productGroup[0];
+    }
+
+    public void setReportType(String chatId, String callBackData) {
+        try {
+            if (callBackData.equals(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA)))
+                saveNew(chatId, "AKT_SVERKA");
+            else if (callBackData.equals(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA_TOVAR)))
+                saveNew(chatId, "AKT_SVERKA_TOVAR");
+            else if (callBackData.equals(utilService.getTextByLanguage(chatId, Constant.WAREHOUSE_BTN)))
+                saveNew(chatId, "WAREHOUSE");
+            else if (callBackData.equals(utilService.getTextByLanguage(chatId, Constant.TRADE)))
+                saveNew(chatId, "TRADE");
+            else if (callBackData.equals(utilService.getTextByLanguage(chatId, Constant.CASH_BOX)))
+                saveNew(chatId, "CASH_BOX");
+            else if (callBackData.equals(utilService.getTextByLanguage(chatId, Constant.COST)))
+                saveNew(chatId, "COST");
+            else if (callBackData.equals(utilService.getTextByLanguage(chatId, Constant.ACCOUNT_DEBT)))
+                saveNew(chatId, "DC");
+            else if (callBackData.equals(utilService.getTextByLanguage(chatId, Constant.TRADE_ALKAN)))
+                saveNew(chatId, "TRADE_ALKAN");
+            else if (callBackData.equals(utilService.getTextByLanguage(chatId, Constant.CASH_BOX_SMENA)))
+                saveNew(chatId, "CASH_BOX_SMENA");
+            else if (callBackData.equals(utilService.getTextByLanguage(chatId, Constant.SETTINGS)))
+                saveNew(chatId, "SETTINGS");
+
+        }catch (Exception e){
+            System.out.println("Exception e");
+        }
+    }
+
+    public void saveProductIdNONE(String chatId) {
+        Optional<ReportDTO> reportDTO = reportRepository.findByClientId(chatId);
+        if (reportDTO.isPresent()){
+            reportDTO.get().setProductID("NONE");
             reportRepository.save(reportDTO.get());
         }
     }

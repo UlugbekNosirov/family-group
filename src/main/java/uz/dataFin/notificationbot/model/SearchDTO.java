@@ -23,6 +23,8 @@ public class SearchDTO extends BaseModel{
 
     String uniqueID;
 
+    String tankID;
+
     String branchID;
 
     String search;

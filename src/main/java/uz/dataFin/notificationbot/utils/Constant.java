@@ -1,25 +1,24 @@
 package uz.dataFin.notificationbot.utils;
 
 public interface Constant {
-    String MY_PHONE_NUMBER = "\uD83D\uDCDE Менинг рақамим";
+    String MY_PHONE_NUMBER = "\uD83D\uDCDE Менинг рақамим/\uD83D\uDCDE Мой номер/\uD83D\uDCDE Mening raqamim";
     String ENTER_MARKET_NAME_BTN = "Market qo'shish";
     String CHOOSE_PERIOD = "⏰Даврни танланг:/⏰Выберите период:/⏰Davrni tanlang:";
     String NO_PERMISSION = "Буйруқдан фойдаланишга рухсат йўқ!/Команда не разрешена!/Buyruqdan foydalanishga ruxsat yo`q!";
     String NO_BALANCE = "Сизда баланс бўйича ҳеч қандай маълумот мавжуд эмас!/У вас нет информации о балансе!/Sizda balans bo`yicha hech qanday ma'lumot mavjud emas!";
     String PRODUCT404 = "Ушбу маҳсулот ҳақида маълумот топилмади!/Информации об этом товаре не найдено!/Ushbu mahsulot haqida ma’lumot topilmadi!";
-    String ALREADY_REGISTRATION = "Рўйхатдан ўтиш муваффақиятли якунланди✅\nCиз ҳақингизда ҳеч қандай маълумот топилмади!\nМаълумотларингиз тасдиқланишини кутинг./Регистрация завершена успешно ✅\n Информация о вас не найдена!\n Подождите, пока ваша информация будет проверена./Ro‘yxatdan o‘tish muvaffaqiyatli yakunlandi✅\nSiz haqingizda hech qanday ma’lumot topilmadi!\nMa’lumotlaringiz tasdiqlanishini kuting.";
-    String CONTRACTOR = "Сиз контрагентлар рўйхатига қўшилгансиз!\n" +
-            "Қуйидаги буйруқлардан бирини танланг!/Вы добавлены в список контрагентов!\nВыберите одну из команд ниже!/Siz kontragentlar ro‘yxatiga qo‘shilgansiz!\nQuyidagi buyruqlardan birini tanlang!";
-     String EMPLOYEE = "Сиз ходимлар рўйхатига қўшилгансиз\n\nКеракли маҳсулот коди ёки штрих кодини киритинг.../Вы добавлены в список сотрудников\n\nВведите необходимый код продукта или код штрих.../Siz xodimlar ro‘yxatiga qo‘shilgansiz \n\nKerakli mahsulot kodi yoki shtrix kodini kiriting...";
-     String REGISTRATION = "Aссалому алайкум!\n▪Рўйхатдан ўтиш учун телефон рақамингизни юборинг.../Привет! \n▪Отправьте свой номер телефона для регистрации.../Assalomu alaykum\n▪Ro`yxatdan o`tish uchun telefon raqamingizni yuboring...";
-     String NO_INFO_ROLE = "Сиз ҳақингизда ҳеч қандай маълумот топилмади!\nМаълумотларингиз тасдиқланишини кутинг./О вас не найдено никакой информации! Подождите, пока ваша информация будет проверена./Сиз ҳақингизда ҳеч қандай маълумот топилмади!\n" +
-             "Маълумотларингиз тасдиқланишини кутинг.";
+    String ALREADY_REGISTRATION = "Рўйхатдан ўтиш муваффақиятли якунланди✅\n\nМаълумотларингиз тасдиқланишини кутинг./Регистрация завершена успешно ✅\n\n Подождите, пока ваша информация будет проверена./Ro‘yxatdan o‘tish muvaffaqiyatli yakunlandi✅\n\nMa’lumotlaringiz tasdiqlanishini kuting.";
+    String CONTRACTOR = "Рўйхатдан ўтиш муваффақиятли якунланди!\n" +
+            "Қуйидаги буйруқлардан бирини танланг!/Регистрация завершена успешно!\nВыберите одну из команд ниже!/Siz kontragentlar ro‘yxatiga qo‘shilgansiz!\nQuyidagi buyruqlardan birini tanlang!";
+    String EMPLOYEE = "Сиз ходимлар рўйхатига қўшилгансиз\n\nКеракли маҳсулот коди ёки штрих кодини киритинг.../Вы добавлены в список сотрудников\n\nВведите необходимый код продукта или код штрих.../Siz xodimlar ro‘yxatiga qo‘shilgansiz \n\nKerakli mahsulot kodi yoki shtrix kodini kiriting...";
+    String REGISTRATION = "Aссалому алайкум!\n▪Рўйхатдан ўтиш учун телефон рақамингизни юборинг.../Привет! \n▪Отправьте свой номер телефона для регистрации.../Assalomu alaykum\n▪Ro`yxatdan o`tish uchun telefon raqamingizni yuboring...";
+    String NO_INFO_ROLE = "Маълумотларингиз тасдиқланишини кутинг./Подождите, пока ваша информация будет проверена./Ma'lumotlaringiz tasdiqlanishini kuting.";
     String ERROR_500 = "Сервер билан хатолик юз берди ботСервиcе.сенд404/Произошла ошибка с сервером botService.send404/Server bilan xatolik yuz berdi botService.send404";
     String ERROR_CHOOSE_DATE = "❌Давр танлашда хатолик юз берди!\nЖараённи қайтадан бошланг.../❌Ошибка в выборе периода!\nЗапускаем процесс заново.../❌Davr tanlashda xatolik yuz berdi!\nJarayonni qaytadan boshlang...";
     String CHOOSE_FORMAT = "Маълумотларни қайси форматда қабул қилмоқчисиз?/В каком формате вы хотите получить данные?/Ma’lumotlarni qaysi formatda qabul qilmoqchisiz?";
-    String AKT_SVERKA = "\uD83D\uDCC5AKT СВEРКА/\uD83D\uDCC5AKT СВEРКА/\uD83D\uDCC5AKT SVERKA";
-    String AKT_SVERKA_TOVAR = "\uD83D\uDCC5АКТ СВEРКА (товар)/\uD83D\uDCC5АКТ СВЕРКА (товары)/\uD83D\uDCC5AKT SVERKA (tovar)";
-    String BALANCE = "\uD83D\uDCB0БАЛАНС/\uD83D\uDCB0 БАЛАНС/\uD83D\uDCB0 BALANS";
+    String AKT_SVERKA = "AKT СВEРКА/AKT СВEРКА/AKT SVERKA";
+    String AKT_SVERKA_TOVAR = "AKT СВEРКА (товар)/AKT СВЕРКА (товары)/AKT SVERKA (tovar)";
+    String BALANCE = "\uD83D\uDCB0 БАЛАНС/\uD83D\uDCB0 БАЛАНС/\uD83D\uDCB0 BALANS";
     String TODAY = "Бугунги кун/Сегодня/Bugungi kun";
     String WEEK = "Ҳафта/Неделя/Hafta";
     String MONTH = "Ой/Месяц/Oy";
@@ -28,7 +27,7 @@ public interface Constant {
     String OTHER = "Бошқа.../Другой.../Boshqa...";
     String CHOOSE_START_DATE = "Бошланғич санани танланг.../Выберите дату начала.../Boshlang‘ich sanani tanlang...";
     String START_DATE = "⏰Бошланғич сана -> /⏰Дата начала -> /⏰Boshlang‘ich sana -> ";
-    String PERIOD = "⏰Давр -> /⏰Дата -> /⏰Davr -> ";
+    String PERIOD = "⏰Сана -> /⏰Дата -> /⏰Sana -> ";
     String END_DATE = "⏰Охирги сана -> /⏰Дата конец -> /⏰Oxirgi sana -> ";
     String CHOOSE_END_DATE = "Охирги сана танланг.../Выберите дату конец.../Oxirgi sana tanlang...";
     String SETTINGS = "⚙️Созламалар/⚙️Настройки/⚙️Sozlamalar";
@@ -41,18 +40,19 @@ public interface Constant {
     String TO_BE_CONTINUED = "Жараённи давом эттиришингиз мумкин!/Вы можете продолжить процесс!/Jarayonni davom ettirishingiz mumkin!";
     String MAIN_MENU = "Қуйидаги буйруқлардан бирини танланг.../Выберите одну из команд ниже.../Quyidagi buyruqlardan birini tanlang...";
     String BACK = "🔙Асосий менюга/🔙В главное меню/🔙Asosiy menyuga";
-    String YES = "Ха/Да/Ha";
+    String YES = "Ҳа/Да/Ha";
     String NO = "Йўқ/Нет/Yo'q";
     String ACCEPT = "Сиз операцияни тасдиқладингиз✅/Вы подтвердили операцию✅/Siz operatsiyani tasdiqladingiz✅";
     String REJECT = "Операция рад етилди\uD83D\uDE45\u200D♂\uFE0F/В операции было отказано\uD83D\uDE45\u200D♂\uFE0F/Operatsiya rad etildi\uD83D\uDE45\u200D♂\uFE0F";
     String ACCOUNT_DEBT = "Қарздорлик-Ҳақдорлик/Дебитор-Кредитор/Qarzdorlik-Haqdorlik";
     String WAREHOUSE = "Омбор/Склад/Ombor";
+    String WAREHOUSE_BTN = "Омбор ҳисоботи/Отчет по складу/Ombor hisoboti";
     String CASH_BOX = "Касса/Касса/Kassa";
-    String COST = "Харажат/Расход/Xarajat";
+    String COST = "Чиқим ҳисоботи/Отчет о расходы/Chiqim hisoboti";
     String TRADE = "Савдо/Продажа/Savdo";
     String CHOOSE_WAREHOUSE = "Омборни танланг.../Выберите склад.../Omborni tanlang...";
     String CHOOSE_CASH_BOX = "Кассани танланг.../Выберите кассу.../Kassani tanlang...";
-    String PRODUCT_GROUP = "\uD83D\uDCC2Махсулотлар гуруҳи/\uD83D\uDCC2Группа товаров/\uD83D\uDCC2Maxsulotlar guruhi";
+    String PRODUCT_GROUP = "Маҳсулотлар гуруҳи/Группа товаров/Mahsulotlar guruhi";
     String PRODUCT = "Товар бўйича излаш/Поиск по продукту/Tovar bo`yicha izlash";
     String NO_FILTR_PRODUCT = "Барчасини кўриш/Увидеть все/Barchasini ko`rish";
     String ENTER_PRODUCT = "Товар номини киритинг(ёки ўхшаш ном).../Введите название продуктов (или похожее название).../Tovar nomini kiriting(yoki o`xshash nom)...";
@@ -62,12 +62,22 @@ public interface Constant {
     String CHOOSE_CONTRACTOR = "Контрагент номини танланг.../Выберите название контрагентов .../Klient nomini tanlang...";
     String ALL_PRODUCT_GROUP = "Барча гуруҳларни кўрсатиш/Показать все группы/Barcha guruhlarni ko`rsatish";
     String BACK_STATE = "🔙Орқага/🔙Назад/🔙Orqaga";
-    String PRODUCT_NAME = "Товар :/Продукт: /Tovar :";
-    String CASHBOX_NAME = "Касса :/Касса: /Kassa :";
-    String BRANCH_NAME = "Филиал :/Филиал: /Filial :";
-    String REQUEST_URI = "http://91.219.62.18/xonchiroq_test/hs";
-    String CLIENT = "Клиент/Клиент/Klient";
-    String POSTAVSHIK = "Поставщик/Поставщик/Yetkazib beruvchi";
-    String ALL = "Хаммаси/Всех/Hammasi";
+    String PRODUCT_NAME = "Товар: /Продукт: /Tovar: ";
+    String CASHBOX_NAME = "Касса: /Касса: /Kassa: ";
+    String BRANCH_NAME = "Филиал: /Филиал: /Filial: ";
+    String CLIENT = "Контрагент/Контрагент/Kontragent";
+    String CLIENT_FOR_KEYBOARD = "Клиент/Клиент/Klient";
+    String POSTAVSHIK = "Етказиб берувчи/Поставщик/Yetkazib beruvchi";
+    String ALL = "Ҳаммаси/Все/Hammasi";
     String NO_INFO = "Танланган буйруқлар бўйича маълумот топилмади!/Для выбранных команд информация не найдена!/Tanlangan buyruqlar bo'yicha ma'lumot topilmadi!";
+    String PAGE = "Саҳифа: /Страница: /Sahifa: ";
+    String TYPE_CONTRACTOR = "Контрагент тури: /Тип контрагента: /Kontragent turi: ";
+    String CHOOSE_PRODUCT = "Товар танлаш/Выбор продукта/Tovar tanlash";
+    String TRADE_ALKAN = "Савдо ҳисоботи/Отчет о продажах/Savdo hisoboti";
+    String ANALYSIS = "АЛКАН САВДО/АЛКАН ТРЕЙД/ALKAN SAVDO";
+    String REQUEST_URI = "http://213.230.99.29/KassaObmen/hs";
+    String CHOOSE_TANK = "Танкни танланг.../Выберите танк.../Tankni tanlang...";
+    String ENTER_BRANCH = "Филиални танланг!/Выбирайте филиал!/Filialni tanlang!";
+
+    String CASH_BOX_SMENA = "Смена ҳисоботи/Отчет о смене/Smena hisoboti";
 }

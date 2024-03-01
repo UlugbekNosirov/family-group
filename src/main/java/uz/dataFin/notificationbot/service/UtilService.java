@@ -2,10 +2,17 @@ package uz.dataFin.notificationbot.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import uz.dataFin.notificationbot.feign.TelegramFeign;
+import uz.dataFin.notificationbot.model.ReportDTO;
 import uz.dataFin.notificationbot.model.Users;
 import uz.dataFin.notificationbot.repository.UserRepository;
+import uz.dataFin.notificationbot.utils.BotState;
 import uz.dataFin.notificationbot.utils.Constant;
 
 import java.nio.file.Path;
@@ -15,6 +22,7 @@ import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 
@@ -22,10 +30,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UtilService {
     private final UserRepository userRepository;
+    private final TelegramFeign feign;
 
-    private final static String words ="abdefghijklmnopqrstuvxyzwcйцукенгшўзхъфқвапролджэячсмитьбюёҳғыщ1234567890.,/*-+_:!?@#$%^&()'\"[]{}|<>'\'№~` ";
+    private final static String words ="abdefghijklmnopqrstuvxyzwcйцукенгшўзхъфқвапролджэячсмитьбюёҳғыщ1234567890.,/*-+_:!?@#$%^&()'\"[]{}|<>'\'№~` '";
     private final static String[] months = {"Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktyabr", "Noyabr", "Dekabr"};
-    public static LocalDate[] getFirstAndLastDayOfMonth(String monthName) {
+    public LocalDate[] getFirstAndLastDayOfMonth(String monthName) {
         Month month = null;
         for (String mName : months) {
             if (mName.equals(monthName)) {
@@ -45,17 +54,21 @@ public class UtilService {
     }
 
     public String getTextByLanguage(String chatId, String text) {
-        Optional<Users> users = userRepository.findByChatId(chatId);
-        String[] str = text.split("/");
-        if (users.isPresent()) {
-            String language = users.get().getLanguage();
-            if (language.equals("uz"))
-                return str[2];
-            else if (language.equals("kril")) {
-                return str[0];
+        try {
+            Optional<Users> users = userRepository.findByChatId(chatId);
+            String[] str = text.split("/");
+            if (users.isPresent()) {
+                String language = users.get().getLanguage();
+                if (language.equals("uz"))
+                    return str[2];
+                else if (language.equals("kril")) {
+                    return str[0];
+                }
             }
+            return str[1];
+        }catch (Exception e){
+            return text;
         }
-        return str[1];
     }
 
 
@@ -174,26 +187,70 @@ public class UtilService {
         return update.getCallbackQuery().getData().startsWith("calendarNone");
     }
 
-    public static boolean containsOnlyNumbers(String text) {
-        text = text.trim();
-        if (text.isEmpty()) {
-            return false;
-        }
-        for (char c : text.toCharArray()) {
-            if (!Character.isDigit(c)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public boolean containsSpecialCharacters(String text) {
         String lowerCase = text.toLowerCase();
         for (char c : lowerCase.toCharArray()) {
-            if (words.indexOf(c) == -1) {
+            if (words.indexOf(c) == -1 || text.length()<4) {
                 return true;
             }
         }
         return false;
     }
+
+    public String uiTextSVERKA(String chatId, ReportDTO reportDTO, String branchName){
+        return getTextByLanguage(chatId, Constant.START_DATE)+reportDTO.getStartDate()+"\n"
+                +getTextByLanguage(chatId, Constant.END_DATE)+reportDTO.getEndDate()+"\n"
+                +getTextByLanguage(chatId, Constant.BRANCH_NAME)+ branchName+"\n";
+    }
+
+    public String uiTextWAREHOUSE(String chatId, ReportDTO reportDTO, String warehouse){
+        return getTextByLanguage(chatId, Constant.START_DATE)+reportDTO.getStartDate()+"\n"
+                +getTextByLanguage(chatId, Constant.END_DATE)+reportDTO.getEndDate()+"\n"
+                +getTextByLanguage(chatId, Constant.WAREHOUSE)+": " +warehouse+"\n";
+    }
+
+    public String uiTextCashBox(String chatId, ReportDTO reportDTO, String warehouseById) {
+        return getTextByLanguage(chatId, Constant.START_DATE)+reportDTO.getStartDate()+"\n"
+                +getTextByLanguage(chatId, Constant.END_DATE)+reportDTO.getEndDate()+"\n"
+                +getTextByLanguage(chatId, Constant.CASH_BOX)+": " +warehouseById+"\n";
+    }
+    public void sendMessage(String chatId, String text, ReplyKeyboardMarkup replyKeyboardMarkup, InlineKeyboardMarkup inlineKeyboardMarkup){
+        try {
+            SendMessage sendMessage = new SendMessage(chatId, text);
+            if (Objects.nonNull(replyKeyboardMarkup))
+                sendMessage.setReplyMarkup(replyKeyboardMarkup);
+            else
+                sendMessage.setReplyMarkup(inlineKeyboardMarkup);
+            feign.sendMessage(sendMessage);
+        } catch (Exception e){
+            System.out.println(e+"\n\nSendMessage error");
+        }
+
+    }
+
+    public void editMessageText(String chatId, Integer messageId, String text, InlineKeyboardMarkup inlineKeyboardMarkup) {
+        try {
+            EditMessageText editMessageText = new EditMessageText();
+            editMessageText.setChatId(chatId);
+            editMessageText.setMessageId(messageId);
+            editMessageText.setText(text);
+            if (Objects.nonNull(inlineKeyboardMarkup))
+                editMessageText.setReplyMarkup(inlineKeyboardMarkup);
+            feign.editMessageText(editMessageText);
+        }catch (Exception e){
+            System.out.println("Error editing message text\n\n\n");
+        }
+    }
+
+    public String getPreviousStep(BotState step, String[] ReportAKTSteps) {
+        for (int i = 1; i < ReportAKTSteps.length; i++) {
+            if (ReportAKTSteps[i].equals(step.name())) {
+                if (ReportAKTSteps[i].startsWith("GET_PRODUCT_"))
+                    return ReportAKTSteps[1];
+                return ReportAKTSteps[i - 1];
+            }
+        }
+        return ReportAKTSteps[0];
+    }
+
 }

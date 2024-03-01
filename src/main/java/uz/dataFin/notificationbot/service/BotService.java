@@ -12,6 +12,7 @@ import org.checkerframework.checker.units.qual.C;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.AnswerInlineQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
@@ -20,7 +21,12 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.inlinequery.inputmessagecontent.InputTextMessageContent;
+import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQueryResult;
+import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQueryResultArticle;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import uz.dataFin.notificationbot.feign.TelegramFeign;
 import uz.dataFin.notificationbot.helper.Keyboard;
 import uz.dataFin.notificationbot.model.*;
@@ -42,6 +48,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -78,15 +85,11 @@ public class BotService {
     }
 
     public void getMainMenuSend(String chatId) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
         String name = userService.getName(chatId);
         if (utilService.containsSpecialCharacters(name)) {
-            sendName(chatId);
+            utilService.sendMessage(chatId, "Илтимос, исмингизни юборинг...", null, null);
         } else if (!getPhone(chatId)) {
-            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.REGISTRATION));
-            sendMessage.setReplyMarkup(keyboard.createContactMarkup());
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.REGISTRATION), keyboard.createContactMarkup(chatId), null);
         } else {
             getRole(chatId);
         }
@@ -103,26 +106,20 @@ public class BotService {
 
     public void getRole(String chatId) {
         api1CService.saveClient(userService.getByChatId(chatId));
+        userService.saveRole(chatId,  userService.getRoleInURL(chatId));
         String role = userService.getRole(chatId);
         switch (role) {
             case "Employee" -> {
-                SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.EMPLOYEE));
-                sendMessage.setReplyMarkup(keyboard.nullBtn(chatId, chatId));
-                feign.sendMessage(sendMessage);
+                utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.EMPLOYEE), keyboard.nullBtn(chatId, chatId), null);
             }
             case "Contractor", "Admin" -> {
-                SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CONTRACTOR));
-                sendMessage.setReplyMarkup(keyboard.panelBtns(role, chatId));
-                feign.sendMessage(sendMessage);
+                utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CONTRACTOR), keyboard.panelBtns(role, chatId), null);
             }
             case "Nobody" -> {
-                SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.ALREADY_REGISTRATION));
-                sendMessage.setReplyMarkup(keyboard.startBtn());
-                feign.sendMessage(sendMessage);
+                utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.ALREADY_REGISTRATION), keyboard.startBtn(), null);
             }
             case "null" -> {
-                SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_INFO_ROLE));
-                feign.sendMessage(sendMessage);
+                utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_INFO_ROLE), null, null);
             }
         }
     }
@@ -132,8 +129,7 @@ public class BotService {
         String chatId = message.getChatId().toString();
         String role = userService.getRole(chatId);
         if (role.equals("Nobody") || role.equals("Contractor")) {
-            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION),null, null);
             return;
         }
         fileService.saveMethodType(chatId, "PRODUCT");
@@ -158,15 +154,12 @@ public class BotService {
                 if (text.startsWith("Код") || text.startsWith("\nШтрих")) {
                     productService.saveCode(message.getText(), chatId);
                 }
-                sendMessage.setReplyMarkup(keyboard.nullBtn(chatId, chatId));
-                feign.sendMessage(sendMessage);
+                utilService.sendMessage(chatId, text, keyboard.nullBtn(chatId, chatId), null);
             } else {
-                SendMessage sendMessage = new SendMessage(chatId, "Something went wrong! (Employee)");
-                feign.sendMessage(sendMessage);
+                utilService.sendMessage(chatId, "Something went wrong! (Employee)", null, null);
             }
         } catch (Exception e) {
-            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.PRODUCT404));
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.PRODUCT404), null, null);
         }
     }
 
@@ -174,22 +167,20 @@ public class BotService {
         Users user = userService.getByChatId(messageDTO.getChatId());
         Market market = marketService.getMarketByUserName(username);
         balanceService.saveBalance(messageDTO, market, user);
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(messageDTO.getChatId());
-        sendMessage.setText("\uD83C\uDFEA " + market.getName() + "\n" + messageDTO.getText());
-        if (Objects.nonNull(messageDTO.getDocumentID())) {
-            sendMessage.setReplyMarkup(keyboard.Query(messageDTO.getChatId()));
-            UpdateUserStatus updateUserStatus = UpdateUserStatus.builder()
-                    .chatId(messageDTO.getChatId())
-                    .Text("\uD83C\uDFEA " + market.getName() + "\n" + messageDTO.getText())
-                    .documentID(messageDTO.getDocumentID())
-                    .clientId(messageDTO.getClientId())
-                    .typeDocument(messageDTO.getTypeDocument())
-                    .status("rejected").build();
-            updateUserStatusService.saveData(updateUserStatus);
+        utilService.sendMessage(messageDTO.getChatId(), "\uD83C\uDFEA " + market.getName() + "\n" + messageDTO.getText(), keyboard.panelBtns(userService.getRoleInURL(messageDTO.getChatId()), messageDTO.getChatId()), null);
+        //        if (Objects.nonNull(messageDTO.getDocumentID())) {
+//            sendMessage.setReplyMarkup(keyboard.Query(messageDTO.getChatId()));
+//            UpdateUserStatus updateUserStatus = UpdateUserStatus.builder()
+//                    .chatId(messageDTO.getChatId())
+//                    .Text("\uD83C\uDFEA " + market.getName() + "\n" + messageDTO.getText())
+//                    .documentID(messageDTO.getDocumentID())
+//                    .clientId(messageDTO.getClientId())
+//                    .typeDocument(messageDTO.getTypeDocument())
+//                    .status("rejected").build();
+//            updateUserStatusService.saveData(updateUserStatus);
         }
-        feign.sendMessage(sendMessage);
-    }
+//        feign.sendMessage(sendMessage);
+//    }
 
 
     public void getBalance(String chatId) {
@@ -219,15 +210,12 @@ public class BotService {
             byte[] responseBody = response.getBody();
             if (responseBody != null) {
                 String text = new String(responseBody, StandardCharsets.UTF_8);
-                SendMessage sendMessage = new SendMessage(chatId, text);
-                feign.sendMessage(sendMessage);
+                utilService.sendMessage(chatId, text, keyboard.panelBtns(userService.getRoleInURL(chatId), chatId), null);
             } else {
-                SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_BALANCE));
-                feign.sendMessage(sendMessage);
+                utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_BALANCE), keyboard.panelBtns(userService.getRoleInURL(chatId), chatId), null);
             }
         } catch (Exception e) {
-            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_BALANCE));
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_BALANCE), keyboard.panelBtns(userService.getRoleInURL(chatId), chatId), null);
         }
     }
 
@@ -241,7 +229,7 @@ public class BotService {
                 return;
             }
             if (state == BotState.SEND_BY_MONTH) {
-                dates = UtilService.getFirstAndLastDayOfMonth(callBackData);
+                dates = utilService.getFirstAndLastDayOfMonth(callBackData);
                 assert dates != null;
             } else if (state == BotState.SEND_BY_WEEK) {
                 dates = utilService.getBeginningOfWeekAndToday();
@@ -252,23 +240,21 @@ public class BotService {
             } else if (state == BotState.SEND_BY_YEAR) {
                 dates = UtilService.getFirstDayOfYearAndToday();
             }
-            if (role.equals("Contractor")) {
-                sendAllDate(chatId, messageId);
-                sendReport(chatId, messageId);
-                return;
-            }
-            if (role.equals("Admin") && reportService.getReportDto(chatId).getTypeReport().startsWith("\uD83D\uDCC5AKT")) {
-                sendAllDate(chatId, messageId);
-                sendWareHouseButton(state, chatId, messageId);
-                return;
-            }
             if (state == BotState.REPORTS) {
                 reportService.saveEndDate(chatId, callBackData);
             } else {
                 reportService.saveStartDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(dates[0]));
                 reportService.saveEndDate(chatId, DateTimeFormatter.ofPattern("yyyy-MM-dd").format(dates[1]));
             }
-            sendWareHouseButton(state, chatId, messageId);
+            if (role.equals("Contractor")) {
+                sendAllDate(chatId, messageId);
+                sendReport(chatId, messageId);
+                return;
+            }
+            if (role.equals("Admin")) {
+                sendAllDate(chatId, messageId);
+                sendWareHouseButton(state, chatId, messageId);
+            }
         } catch (Exception e) {
             System.out.println(LocalDate.now() + " " + userService.getName(chatId) + ", " + chatId + ", File jo`natish bilan bog`liq xatolik, botService.getReport");
         }
@@ -278,40 +264,28 @@ public class BotService {
         ReportDTO reportDto = reportService.getReportDto(chatId);
         try {
             if (state != BotState.SEND_WAREHOUSE_BACK) {
-                EditMessageText editMessageText = new EditMessageText();
-                editMessageText.setChatId(chatId);
-                editMessageText.setMessageId(messageId);
                 String text = utilService.getTextByLanguage(chatId, Constant.START_DATE) + reportDto.getStartDate() + "\n" + utilService.getTextByLanguage(chatId, Constant.END_DATE) + reportDto.getEndDate();
-                editMessageText.setText(text);
-                editMessageText.setReplyMarkup(null);
-                feign.editMessageText(editMessageText);
+                utilService.editMessageText(chatId, messageId, text, null);
             }
         } catch (Exception e) {
             System.out.println(LocalDate.now() + ", " + chatId + ", Davr saqlashda xatolik yuz berdi, botService.sendAllDate");
         }
-        SendMessage sendMessage;
         if (reportDto.getTypeReport().equals("CASH_BOX")) {
-            sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CHOOSE_CASH_BOX));
-            sendMessage.setReplyMarkup(keyboard.cashBox(chatId));
-        } else if (reportDto.getTypeReport().equals("DC") || reportDto.getTypeReport().startsWith("\uD83D\uDCC5AKT") || reportDto.getTypeReport().startsWith("COST")) {
-            sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
-            sendMessage.setReplyMarkup(keyboard.branch(chatId));
-        }else {
-            sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CHOOSE_WAREHOUSE));
-            sendMessage.setReplyMarkup(keyboard.wareHouse(chatId));
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CHOOSE_CASH_BOX), keyboard.cashBox(chatId), null);
+        } else if (reportDto.getTypeReport().equals("DC") || reportDto.getTypeReport().startsWith("AKT") || reportDto.getTypeReport().startsWith("COST")) {
+            ReplyKeyboardMarkup branch = keyboard.branch(chatId);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.ENTER_CONTRACTOR), branch, null);
+        } else {
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CHOOSE_WAREHOUSE), keyboard.wareHouse(chatId), null);
         }
-        feign.sendMessage(sendMessage);
     }
 
     public void sendStartDate(BotState state, String chatId) {
         String role = userService.getRole(chatId);
         if (role.equals("Nobody") || role.equals("Employee")) {
-            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION), null, null);
             return;
         }
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
         if (state == BotState.GET_START_DATEV2) {
             reportService.saveNew(chatId, utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA));
         } else if (state == BotState.GET_START_DATE)
@@ -320,43 +294,37 @@ public class BotService {
             reportService.saveNew(chatId, "WAREHOUSE");
         else if (state == BotState.GET_START_DATE_TRADE)
             reportService.saveNew(chatId, "TRADE");
+        else if (state == BotState.GET_START_DATE_TRADE_ALKAN)
+            reportService.saveNew(chatId, "TRADE_ALKAN");
         else if (state == BotState.GET_START_DATE_CASH_BOX)
             reportService.saveNew(chatId, "CASH_BOX");
         else if (state == BotState.GET_START_DATE_COST)
             reportService.saveNew(chatId, "COST");
         else if (state == BotState.GET_PERIOD) {
             reportService.saveNew(chatId, "DC");
-            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_PERIOD));
-            sendMessage.setReplyMarkup(keyboard.calendarBtns(LocalDate.now().toString()));
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CHOOSE_PERIOD), null, keyboard.calendarBtns(LocalDate.now().toString()));
             return;
         }
-        sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_PERIOD));
-        sendMessage.setReplyMarkup(keyboard.periodKeyboards(chatId));
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CHOOSE_PERIOD), null, keyboard.periodKeyboards(chatId));
     }
 
     public void saveStartDate(Message message, String chatId, String callbackQuery) {
         ReportDTO reportDto = reportService.getReportDto(chatId);
-        EditMessageText editMessageText = new EditMessageText();
-        editMessageText.setChatId(chatId);
-        editMessageText.setMessageId(message.getMessageId());
-        if (reportDto.getTypeReport().equals("DC")){
+
+        if (reportDto.getTypeReport().equals("DC")) {
             reportService.savePeriod(chatId, callbackQuery);
+
             String text = utilService.getTextByLanguage(chatId, Constant.PERIOD) + callbackQuery;
-            editMessageText.setText(text);
-            feign.editMessageText(editMessageText);
-            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
-            sendMessage.setReplyMarkup(keyboard.branch(chatId));
-            feign.sendMessage(sendMessage);
+            utilService.editMessageText(chatId, message.getMessageId(), text, null);
+
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU), keyboard.typeContractor(chatId), null);
             return;
         }
         reportService.saveStartDate(chatId, callbackQuery);
+
         String text = utilService.getTextByLanguage(chatId, Constant.START_DATE) + callbackQuery + "\n|\n" +
                 utilService.getTextByLanguage(chatId, Constant.CHOOSE_END_DATE);
-        editMessageText.setReplyMarkup(keyboard.calendarBtns(LocalDate.now().toString()));
-        editMessageText.setText(text);
-        feign.editMessageText(editMessageText);
+        utilService.editMessageText(chatId, message.getMessageId(), text, keyboard.calendarBtns(LocalDate.now().toString()));
     }
 
     public void editDate(String chatId, Integer messageId, String callBackData) {
@@ -369,8 +337,7 @@ public class BotService {
             System.out.println(callBackData);
             feign.editMessageReplyMarkup(editMarkup);
         } catch (Exception e) {
-            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.ERROR_CHOOSE_DATE));
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.ERROR_CHOOSE_DATE), keyboard.panelBtns(userService.getRole(chatId), chatId), null);
         }
     }
 
@@ -517,84 +484,74 @@ public class BotService {
     }
 
     private void sendClient404Error(String chatId, Integer messageId) {
-        EditMessageText editMessageText = new EditMessageText();
-        editMessageText.setChatId(chatId);
-        editMessageText.setMessageId(messageId);
-        editMessageText.setText(utilService.getTextByLanguage(chatId, Constant.ERROR_500));
-        feign.editMessageText(editMessageText);
+        utilService.editMessageText(chatId, messageId, utilService.getTextByLanguage(chatId, Constant.ERROR_500), null);
     }
 
 
     public void sendAllDate(String chatId, Integer messageId) {
         try {
             ReportDTO dateDTO = reportService.getReportDto(chatId);
-            EditMessageText editMessageText = new EditMessageText();
-            editMessageText.setChatId(chatId);
-            editMessageText.setMessageId(messageId);
+
             String text = utilService.getTextByLanguage(chatId, Constant.START_DATE) + dateDTO.getStartDate() + "\n" + utilService.getTextByLanguage(chatId, Constant.END_DATE) + dateDTO.getEndDate();
-            editMessageText.setText(text);
-            editMessageText.setReplyMarkup(null);
-            feign.editMessageText(editMessageText);
+            utilService.editMessageText(chatId, messageId, text, null);
         } catch (Exception e) {
             System.out.println(LocalDate.now() + ", " + chatId + ", Davr saqlashda xatolik yuz berdi, botService.sendAllDate");
         }
     }
 
     public void sendError(String chatId, Integer messageId) {
-        EditMessageText editMessageText = new EditMessageText();
-        editMessageText.setText(utilService.getTextByLanguage(chatId, Constant.ERROR_CHOOSE_DATE));
-        editMessageText.setChatId(chatId);
-        editMessageText.setMessageId(messageId);
-        editMessageText.setReplyMarkup(null);
-        feign.editMessageText(editMessageText);
+        utilService.editMessageText(chatId, messageId, utilService.getTextByLanguage(chatId, Constant.ERROR_CHOOSE_DATE), null);
     }
 
 
     public void saveName(Message message, String chatId) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        userService.saveUserName(message, chatId);
+
+        String name = userService.getName(chatId);
+        if (!utilService.containsSpecialCharacters(message.getText())) {
+            if (utilService.containsSpecialCharacters(name)) {
+                userService.saveUserName(message, chatId);
+            }else if (!getPhone(chatId)){
+                utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.REGISTRATION), keyboard.createContactMarkup(chatId), null);
+                return;
+            }
+        }else {
+            if (utilService.containsSpecialCharacters(name)){
+                utilService.sendMessage(chatId, "Илтимос, исмингизни юборинг...", null, null);
+                return;
+            }else if (!getPhone(chatId)){
+                utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.REGISTRATION), keyboard.createContactMarkup(chatId), null);
+                return;
+            }
+        }
         if (!getPhone(chatId)) {
-            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.REGISTRATION));
-            sendMessage.setReplyMarkup(keyboard.createContactMarkup());
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.REGISTRATION), keyboard.createContactMarkup(chatId), null);
         }
     }
 
     public void sendSettings(String chatId) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
-        sendMessage.setReplyMarkup(keyboard.settings(chatId));
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU), keyboard.settings(chatId), null);
     }
 
     public void editTypeFile(BotState state, String chatId, Integer messageId, String callBackData) {
         String role = userService.getRole(chatId);
         if (role.equals("Nobody")) {
-            SendMessage sendMessage = new SendMessage();
-            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION), null, null);
             return;
         }
         if (state == BotState.EDIT2XLSX) {
+            reportService.saveTypeFile(chatId, "xlsx");
             fileService.saveTypeFile(chatId, "xlsx");
         } else if (state == BotState.EDIT2PDF) {
+            reportService.saveTypeFile(chatId, "pdf");
             fileService.saveTypeFile(chatId, "pdf");
         } else if (state == BotState.EDIT2JPG) {
+            reportService.saveTypeFile(chatId, "jpg");
             fileService.saveTypeFile(chatId, "jpg");
         }
         try {
-            EditMessageText editMessageText = new EditMessageText();
-            editMessageText.setChatId(chatId);
-            editMessageText.setMessageId(messageId);
-            editMessageText.setText(utilService.getTextByLanguage(chatId, Constant.CHANGE_TYPE_FILE_200) + callBackData);
-            feign.editMessageText(editMessageText);
+            utilService.editMessageText(chatId, messageId, utilService.getTextByLanguage(chatId, Constant.CHANGE_TYPE_FILE_200) + callBackData, null);
         } catch (Exception e) {
-            SendMessage sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHANGE_TYPE_FILE_200) + callBackData);
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CHANGE_TYPE_FILE_200)+callBackData, keyboard.settings(chatId), null);
         }
     }
 
@@ -602,48 +559,29 @@ public class BotService {
     public void sendStartDateAsCalendar(Message message, String chatId) {
         String role = userService.getRole(chatId);
         if (role.equals("Nobody") || role.equals("Employee")) {
-            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION), null, null);
             return;
         }
         try {
-            EditMessageText sendMessage = new EditMessageText();
-            sendMessage.setChatId(chatId);
-            sendMessage.setMessageId(message.getMessageId());
-            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_START_DATE));
-            sendMessage.setReplyMarkup(keyboard.calendarBtns(LocalDate.now().toString()));
-            feign.editMessageText(sendMessage);
+            utilService.editMessageText(chatId, message.getMessageId(), utilService.getTextByLanguage(chatId, Constant.CHOOSE_START_DATE), keyboard.calendarBtns(LocalDate.now().toString()));
         } catch (Exception e) {
-            SendMessage sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_START_DATE));
-            sendMessage.setReplyMarkup(keyboard.calendarBtns(LocalDate.now().toString()));
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CHOOSE_START_DATE), null, keyboard.calendarBtns(LocalDate.now().toString()));
         }
     }
 
     public void sendTypeFile(String chatId) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_FORMAT));
-        sendMessage.setReplyMarkup(keyboard.typeFileButtons(chatId));
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CHOOSE_FORMAT), null, keyboard.typeFileButtons(chatId));
     }
 
     public void sendLanguage(String chatId) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_LANGUAGE));
-        sendMessage.setReplyMarkup(keyboard.chooseLanguage());
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CHOOSE_FORMAT), null, keyboard.chooseLanguage());
     }
 
     public void editLanguage(BotState state, String chatId, Integer messageId, String callBackData) {
         String role = userService.getRole(chatId);
         SendMessage sendMessage = new SendMessage();
         if (role.equals("Nobody")) {
-            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION));
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_PERMISSION), null, null);
             return;
         }
         if (state == BotState.EDIT2UZ) {
@@ -653,40 +591,25 @@ public class BotService {
         } else if (state == BotState.EDIT2KRIL) {
             userService.saveLanguage(chatId, "kril");
         }
-        EditMessageText editMessageText = new EditMessageText();
-        editMessageText.setChatId(chatId);
-        editMessageText.setMessageId(messageId);
-        editMessageText.setText(utilService.getTextByLanguage(chatId, Constant.CHANGE_LANGUAGE_200) + callBackData);
-        feign.editMessageText(editMessageText);
-        sendMessage.setChatId(chatId);
-        sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.TO_BE_CONTINUED));
-        sendMessage.setReplyMarkup(keyboard.settings(chatId));
-        feign.sendMessage(sendMessage);
+        utilService.editMessageText(chatId, messageId, utilService.getTextByLanguage(chatId, Constant.CHANGE_LANGUAGE_200) + callBackData, new InlineKeyboardMarkup());
+        utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.TO_BE_CONTINUED), keyboard.settings(chatId), null);
     }
 
     public void sendMainMenu(String chatId) {
-        SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
-        sendMessage.setReplyMarkup(keyboard.panelBtns(userService.getRole(chatId), chatId));
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU), keyboard.panelBtns(userService.getRoleInURL(chatId), chatId), null);
     }
 
     public void sendContinue(String chatId) {
-        SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU), null, null);
     }
 
-    public void sendCheckingMoney(BotState state, Message message) {
-        UpdateUserStatus data = updateUserStatusService.getData(message.getChatId().toString(), message.getText());
+    public void sendCheckingMoney(String chatId, Integer messageID, BotState state, Message message) {
+        UpdateUserStatus data = updateUserStatusService.getData(chatId, message.getText());
         if (state == BotState.SEND_AGREED_MONEY) {
             Integer response = postStatus(data, "agreed");
             if (response == 200) {
                 try {
-                    EditMessageText editMessageText = new EditMessageText();
-                    editMessageText.setChatId(message.getChatId().toString());
-                    editMessageText.setReplyMarkup(null);
-                    editMessageText.setMessageId(message.getMessageId());
-                    editMessageText.setText(utilService.getTextByLanguage(message.getChatId().toString(), Constant.ACCEPT));
-                    feign.editMessageText(editMessageText);
+                    utilService.editMessageText(chatId, messageID, utilService.getTextByLanguage(chatId, Constant.ACCEPT), null);
                 } catch (Exception e) {
                     System.out.println("Cannot edit message text yes/no");
                 }
@@ -695,12 +618,7 @@ public class BotService {
             Integer response = postStatus(data, "rejected");
             if (response == 200) {
                 try {
-                    EditMessageText editMessageText = new EditMessageText();
-                    editMessageText.setChatId(message.getChatId().toString());
-                    editMessageText.setReplyMarkup(null);
-                    editMessageText.setMessageId(message.getMessageId());
-                    editMessageText.setText(utilService.getTextByLanguage(message.getChatId().toString(), Constant.REJECT));
-                    feign.editMessageText(editMessageText);
+                    utilService.editMessageText(chatId, messageID, utilService.getTextByLanguage(chatId, Constant.REJECT), null);
                 } catch (Exception e) {
                     System.out.println("Cannot edit message text yes/no");
                 }
@@ -738,7 +656,7 @@ public class BotService {
             getReportCashBox(chatId, message);
         } else if (reportDto.getTypeReport().equals("DC")) {
             getReportBranch(chatId, message);
-        } else if (reportDto.getTypeReport().startsWith("\uD83D\uDCC5AKT")) {
+        } else if (reportDto.getTypeReport().startsWith("AKT")) {
             getClients(chatId, message);
         } else if (reportDto.getTypeReport().startsWith("COST")) {
             getReportCost(chatId, message);
@@ -754,7 +672,7 @@ public class BotService {
                     byChatId.get().setPage(1);
                     searchRepository.save(byChatId.get());
                 }
-                reportService.saveWareHouseId(chatId, new WarehouseDTO("", "", Boolean.FALSE));
+//                reportService.saveWareHouseId(chatId, new WarehouseDTO("", "", Boolean.FALSE));
             } else if (message.getText().equals(utilService.getTextByLanguage(chatId, Constant.BACK_STATE))) {
                 text = utilService.getTextByLanguage(chatId, Constant.WAREHOUSE) + ": " + warehouseService.getByWarehouseID(reportService.getReportDto(chatId).getWarehouseID());
                 Optional<SearchDTO> byChatId = searchRepository.findByChatId(chatId);
@@ -766,61 +684,71 @@ public class BotService {
             } else if (warehouseService.getByClick(message.getText())) {
                 text = utilService.getTextByLanguage(chatId, Constant.WAREHOUSE) + ": " + message.getText();
                 sendMessage.setText(text + "\n" + utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
-                reportService.saveWareHouseId(chatId, new WarehouseDTO(message.getText(), warehouseService.getByName(message.getText()), Boolean.FALSE));
+//                reportService.saveWareHouseId(chatId, new WarehouseDTO(message.getText(), warehouseService.getByName(message.getText()), Boolean.FALSE));
             }
-            feign.sendMessage(sendMessage);
+            try {
+                feign.sendMessage(sendMessage);
+            }catch (Exception e){
+                System.out.println("\n\n\nError saveWarehouse() method in feign condition\n\n\n......");
+            }
         }
     }
 
     private void getReportCost(String chatId, Message message) {
         reportService.saveBranchID(chatId, warehouseService.getByNameIsBranch(message.getText()));
-        SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.BRANCH_NAME) + message.getText());
-        sendMessage.setReplyMarkup(keyboard.panelBtns(userService.getRole(chatId), chatId));
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, uiTextCost(reportService.getReportDto(chatId), chatId), keyboard.panelBtns(userService.getRole(chatId), chatId), null);
         sendReportWarehouse(reportService.getReportDto(chatId), chatId);
+    }
+
+    public String uiTextCost(ReportDTO reportDTO, String chatId) {
+        return utilService.getTextByLanguage(chatId, Constant.START_DATE) + reportDTO.getStartDate() + "\n"
+                + utilService.getTextByLanguage(chatId, Constant.END_DATE) + reportDTO.getEndDate() + "\n\n"
+                + utilService.getTextByLanguage(chatId, Constant.BRANCH_NAME) + utilService.getTextByLanguage(chatId, warehouseService.getByWarehouseID(reportDTO.getWarehouseID()));
     }
 
     private void getClients(String chatId, Message message) {
         reportService.saveBranchID(chatId, warehouseService.getByNameIsBranch(message.getText()));
-        SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.BRANCH_NAME) + message.getText() +"\n\n"+utilService.getTextByLanguage(chatId, Constant.ENTER_CONTRACTOR));
-        sendMessage.setReplyMarkup(keyboard.getContractors(chatId));
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, utilService.getTextByLanguage(chatId, Constant.BRANCH_NAME) + message.getText() + "\n\n" + Constant.ENTER_CONTRACTOR), keyboard.getContractors(chatId), null);
     }
 
 
     public void getByProductGroup(BotState state, String chatId) {
-        SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.ENTER_PRODUCT_GROUP));
-        sendMessage.setChatId(chatId);
+        String text = "";
         if (state == BotState.GET_BY_PRODUCT_GROUP) {
-            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.ENTER_PRODUCT_GROUP));
+            text = utilService.getTextByLanguage(chatId, Constant.ENTER_PRODUCT_GROUP);
+        } else if (state == BotState.GET_BY_PRODUCT) {
+            text = utilService.getTextByLanguage(chatId, Constant.ENTER_PRODUCT);
         }
-        else if (state == BotState.GET_BY_PRODUCT) {
-            sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.ENTER_PRODUCT));
-        }
-        sendMessage.setReplyMarkup(keyboard.getAllGroupOfProducts(state, chatId));
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, text, keyboard.getAllGroupOfProducts(state, chatId), null);
     }
 
     public void getByProductGroupByAPI(BotState state, String chatId, Message message) {
-        SearchDTO searchDTO = reportService.saveSearch(state, chatId, message.getText());
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
+        SearchDTO searchDTO = reportService.saveSearch( chatId, "", message.getText());
+        String text = "";
+        if (message.getText().equals(utilService.getTextByLanguage(chatId, Constant.BACK))){
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU), keyboard.panelBtns(userService.getRoleInURL(chatId), chatId), null);
+            return;
+        }
+        System.out.println(message.getText());
         if (!message.getText().equals(utilService.getTextByLanguage(chatId, Constant.BACK_STATE))) {
             if (state == BotState.GET_PRODUCT_IN_API) {
-                sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.ENTER_PRODUCT));
+                text = utilService.getTextByLanguage(chatId, Constant.ENTER_PRODUCT);
             } else if (state == BotState.GET_CONTRACTOR_IN_API) {
-                sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_CONTRACTOR));
+                text = utilService.getTextByLanguage(chatId, Constant.CHOOSE_CONTRACTOR);
+            } else if (state == BotState.GET_TANKS) {
+                text = utilService.getTextByLanguage(chatId, Constant.CHOOSE_TANK);
             } else {
-                sendMessage.setText(utilService.getTextByLanguage(chatId, Constant.CHOOSE_PRODUCT_GROUP));
+                text = utilService.getTextByLanguage(chatId, Constant.CHOOSE_PRODUCT_GROUP);
             }
-            ReplyKeyboard replyKeyboard = keyboard.productGroup(state, chatId, searchDTO);
-            sendMessage.setReplyMarkup(replyKeyboard);
-            feign.sendMessage(sendMessage);
+            ReplyKeyboardMarkup replyKeyboardMarkup = keyboard.groupElements(state, chatId, searchDTO);
+            utilService.sendMessage(chatId, text, replyKeyboardMarkup, null);
         } else {
             if (state == BotState.GET_CONTRACTOR_IN_API) {
-                sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
-                sendMessage.setReplyMarkup(keyboard.branch(chatId));
-                feign.sendMessage(sendMessage);
+                utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU), keyboard.branch(chatId), null);
+                return;
+            }
+            if (state == BotState.GET_TANKS){
+                utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU), keyboard.panelBtns(userService.getRoleInURL(chatId), chatId), null);
                 return;
             }
             saveWarehouse(chatId, message);
@@ -828,37 +756,60 @@ public class BotService {
     }
 
     public void getReportWarehouse(BotState state, String chatId, Message message) {
-        ReportDTO reportDTO = reportService.saveProductId(state, chatId, message.getText());
-        SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.PRODUCT_NAME) + message.getText());
-        sendMessage.setReplyMarkup(keyboard.panelBtns(userService.getRole(chatId), chatId));
-        feign.sendMessage(sendMessage);
-        sendReportWarehouse(reportDTO, chatId);
+        if (state!=BotState.GET_REPORT_ANALYSIS){
+            ReportDTO reportDTO = reportService.saveProductId(state, chatId, message.getText());
+            utilService.sendMessage(chatId, uiText(reportDTO, chatId, message.getText()), keyboard.panelBtns(userService.getRole(chatId), chatId), null);
+            sendReportWarehouse(reportDTO, chatId);
+        }else {
+            SearchDTO searchDTO = reportService.getTankTankID(chatId, message.getText());
+            String response = api1CService.sendReportTank(chatId, searchDTO);
+            if (response.equals("ERROR"))
+                utilService.sendMessage(chatId, "Xatolik yuz berdi", keyboard.panelBtns(userService.getRoleInURL(chatId), chatId), null);
+            else
+                utilService.sendMessage(chatId, response, keyboard.panelBtns(userService.getRoleInURL(chatId), chatId), null);
+        }
+    }
+
+
+
+    public String uiText(ReportDTO reportDTO, String chatId, String messageText) {
+        return utilService.getTextByLanguage(chatId, Constant.START_DATE) + reportDTO.getStartDate() + "\n"
+                + utilService.getTextByLanguage(chatId, Constant.END_DATE) + reportDTO.getEndDate() + "\n\n"
+                + utilService.getTextByLanguage(chatId, Constant.WAREHOUSE) + ": " + utilService.getTextByLanguage(chatId, warehouseService.getByWarehouseID(reportDTO.getWarehouseID())) + "\n\n" +
+                utilService.getTextByLanguage(chatId, Constant.PRODUCT_NAME) + messageText;
     }
 
     public void getReportSVERKA(String chatId, Message message) {
         ReportDTO reportDTO = reportService.saveClientId(chatId, message.getText());
-        SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CLIENT) + message.getText());
-        sendMessage.setReplyMarkup(keyboard.panelBtns(userService.getRole(chatId), chatId));
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, uiTextSverka(reportDTO, chatId, message.getText()), keyboard.panelBtns(userService.getRole(chatId), chatId), null);
         sendReportWarehouse(reportDTO, chatId);
+    }
+
+    public String uiTextSverka(ReportDTO reportDTO, String chatId, String messageText) {
+        return utilService.getTextByLanguage(chatId, Constant.START_DATE) + reportDTO.getStartDate() + "\n"
+                + utilService.getTextByLanguage(chatId, Constant.END_DATE) + reportDTO.getEndDate() + "\n\n"
+                + utilService.getTextByLanguage(chatId, Constant.BRANCH_NAME)  + utilService.getTextByLanguage(chatId, warehouseService.getByWarehouseID(reportDTO.getWarehouseID())) + "\n\n" +
+                utilService.getTextByLanguage(chatId, Constant.CLIENT) + ": " + messageText;
     }
 
     public void getReportCashBox(String chatId, Message message) {
         ReportDTO reportDTO = reportService.saveCashID(chatId, message.getText());
-        SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CASHBOX_NAME) + message.getText());
-        sendMessage.setReplyMarkup(keyboard.panelBtns(userService.getRole(chatId), chatId));
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, uiTextCashBox(reportDTO, chatId, message.getText()), keyboard.panelBtns(userService.getRole(chatId), chatId), null);
         sendReportWarehouse(reportDTO, chatId);
+    }
+
+    public String uiTextCashBox(ReportDTO reportDTO, String chatId, String messageText) {
+        return utilService.getTextByLanguage(chatId, Constant.START_DATE) + reportDTO.getStartDate() + "\n"
+                + utilService.getTextByLanguage(chatId, Constant.END_DATE) + reportDTO.getEndDate() + "\n\n"
+                + utilService.getTextByLanguage(chatId, Constant.CASHBOX_NAME) + messageText;
     }
 
     public void getReportBranch(String chatId, Message message) {
         reportService.saveBranchID(chatId, warehouseService.getByNameIsBranch(message.getText()));
-        SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.BRANCH_NAME) + message.getText());
-        sendMessage.setReplyMarkup(keyboard.typeContractor(chatId));
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.BRANCH_NAME) + message.getText(), keyboard.typeContractor(chatId), null);
     }
 
-    public void sendReportWarehouse(ReportDTO reportDTO, String chatId) {
+        public void sendReportWarehouse(ReportDTO reportDTO, String chatId) {
         Optional<SearchDTO> dto = searchRepository.findByChatId(chatId);
         dto.ifPresent(searchDTO -> searchDTO.setPage(1));
         try {
@@ -880,8 +831,7 @@ public class BotService {
                 throw new RuntimeException(e);
             }
         } catch (Exception e) {
-            SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_INFO));
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_INFO), null, null);
         }
     }
 
@@ -894,13 +844,11 @@ public class BotService {
             reportService.saveTypeContractor(chatId, 3);
         }
         ReportDTO reportDto = reportService.getReportDto(chatId);
-        SendMessage sendMessage = new SendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.MAIN_MENU));
-        sendMessage.setReplyMarkup(keyboard.panelBtns(userService.getRole(chatId), chatId));
-        String text = utilService.getTextByLanguage(chatId, Constant.BRANCH_NAME)+": "+warehouseService.getByWarehouseID(reportDto.getBranchID())+
-                "\n\n"+message.getText();
+        String text = utilService.getTextByLanguage(chatId, Constant.PERIOD) + reportDto.getPeriod() + "\n\n"
+                + utilService.getTextByLanguage(chatId, Constant.BRANCH_NAME) + warehouseService.getByWarehouseID(reportDto.getBranchID()) + "\n\n"
+                + utilService.getTextByLanguage(chatId, Constant.TYPE_CONTRACTOR) + message.getText();
 
-        sendMessage.setText(text);
-        feign.sendMessage(sendMessage);
+        utilService.sendMessage(chatId, text, keyboard.panelBtns(userService.getRole(chatId), chatId), null);
         sendReportWarehouse(reportDto, chatId);
     }
 
@@ -913,9 +861,48 @@ public class BotService {
                 searchDTO.ifPresent(dto -> dto.setPage(dto.getPage() - 1));
             }
             SearchDTO save = searchRepository.save(searchDTO.get());
-            SendMessage sendMessage = new SendMessage(chatId, "Sahifa: " + save.getPage());
-            sendMessage.setReplyMarkup(keyboard.productGroup(userService.getState(chatId), chatId, save));
-            feign.sendMessage(sendMessage);
+            utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.PAGE) + save.getPage(), keyboard.groupElements(userService.getState(chatId), chatId, save), null);
+        }
+    }
+
+    public void testInlineMode(Update update) {
+        String query = update.getInlineQuery().getQuery();
+        List<InlineQueryResult> inlineQueryResults = processInlineQuery(query);
+        sendInlineQueryResults(update.getInlineQuery().getId(), inlineQueryResults);
+    }
+
+    private List<InlineQueryResult> processInlineQuery(String query) {
+        List<InlineQueryResult> resultList = new ArrayList<>();
+
+        InlineQueryResultArticle result1 = InlineQueryResultArticle.builder()
+                .title(query+"  "+LocalDate.now())
+                .id("1")
+                .description("Strengthens your back, glutes, and legs.")
+                .inputMessageContent(new InputTextMessageContent("Hello")).build();
+        resultList.add(result1);
+
+        InlineQueryResultArticle result2 = InlineQueryResultArticle.builder()
+                .title("Bench Press")
+                .id("2")
+                .description("Targets your chest, shoulders, and triceps.")
+                .inputMessageContent(new InputTextMessageContent("Hello")).build();
+        resultList.add(result2);
+
+
+        return resultList;
+    }
+
+    private void sendInlineQueryResults(String inlineQueryId, List<InlineQueryResult> results) {
+
+
+        AnswerInlineQuery answerInlineQuery = AnswerInlineQuery.builder()
+                .inlineQueryId(inlineQueryId)
+                .results(results).build();
+
+        try {
+            feign.answerInlineQuery(answerInlineQuery);
+        }catch (Exception e){
+            System.out.println(e);
         }
     }
 }

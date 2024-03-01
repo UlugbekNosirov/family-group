@@ -14,7 +14,13 @@ public interface WarehouseRepository extends JpaRepository<WarehouseDTO, Long> {
     @Query(nativeQuery = true, value = "select * from warehousedto where name = ?1 and is_branch = false")
     Optional<WarehouseDTO> findByNameAAndIsBranch(String name, Boolean isBranch);
 
+    @Query(nativeQuery = true, value = "select * from warehousedto where uniqueid = ?1 and is_branch = false")
+    Optional<WarehouseDTO> findWarehouseDTOByUniqueID(String name, Boolean isBranch);
+
     @Query(nativeQuery = true, value = "select * from warehousedto where name = ?1 and is_branch = true")
     Optional<WarehouseDTO> findByNameAAndNotIsBranch(String name, Boolean isBranch);
+
+    @Query(nativeQuery = true, value = "select * from warehousedto where uniqueid = ?1 and is_branch = true")
+    Optional<WarehouseDTO> findByBranchId(String name, Boolean isBranch);
 
 }

@@ -3,6 +3,7 @@ package uz.dataFin.notificationbot.feign;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.telegram.telegrambots.meta.api.methods.AnswerInlineQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendLocation;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -18,7 +19,8 @@ import static uz.dataFin.notificationbot.utils.Security.REQUEST_FULL_PATH;
 @FeignClient(url = REQUEST_FULL_PATH, name = "TelegramFeign")
 public interface TelegramFeign extends Method {
 
-
+    @PostMapping(ANSWER_INLINE_QUERY)
+    Result answerInlineQuery(@RequestBody AnswerInlineQuery answerInlineQuery);
     @PostMapping(SEND_MESSAGE)
     Result sendMessage(@RequestBody SendMessage sendMessage);
 

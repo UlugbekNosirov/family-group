@@ -23,8 +23,12 @@ public class WarehouseService {
 
     public void saveOrNONE(WarehouseDTO warehouseDTO){
         Optional<WarehouseDTO> dto = warehouseRepository.findByUniqueID(warehouseDTO.getUniqueID());
-        if (dto.isEmpty())
+        if (dto.isPresent()) {
+            dto.get().setName(dto.get().getName());
+            warehouseRepository.save(dto.get());
+        }else {
             warehouseRepository.save(warehouseDTO);
+        }
     }
 
     public Boolean getByClick(String text){
@@ -42,13 +46,27 @@ public class WarehouseService {
         return dto.map(WarehouseDTO::getUniqueID).orElse(null);
     }
 
+    public String getWarehouseById(String text) {
+        try {
+            Optional<WarehouseDTO> dto = warehouseRepository.findWarehouseDTOByUniqueID(text, Boolean.FALSE);
+            return dto.map(WarehouseDTO::getName).orElse("-/-/-");
+        }catch (Exception e){
+            return "-/-/-";
+        }
+    }
+
     public String getByNameIsBranch(String text) {
         Optional<WarehouseDTO> dto = warehouseRepository.findByNameAAndNotIsBranch(text, Boolean.TRUE);
-        return dto.map(WarehouseDTO::getUniqueID).orElse(null);
+        return dto.map(WarehouseDTO::getUniqueID).orElse("-/-/-");
     }
 
     public String getByWarehouseID(String warehouseID) {
         Optional<WarehouseDTO> dto = warehouseRepository.findByUniqueID(warehouseID);
-        return dto.map(WarehouseDTO::getName).orElse(null);
+        return dto.map(WarehouseDTO::getName).orElse("-/-/-");
+    }
+
+    public String getBranchNameById(String branchID) {
+        Optional<WarehouseDTO> dto = warehouseRepository.findByBranchId(branchID, Boolean.TRUE);
+        return dto.map(WarehouseDTO::getName).orElse("-/-/-");
     }
 }

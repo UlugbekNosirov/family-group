@@ -17,6 +17,7 @@ public class ReportDTO extends BaseModel {
     String clientId;
     String warehouseID;
     String contractorID;
+    String tankID;
     String period;
     String startDate;
     String endDate;

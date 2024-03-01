@@ -70,11 +70,12 @@ public class Api1CService {
         String FULL_URI = "";
         if (state == BotState.GET_PRODUCT_IN_API || state == BotState.GET_REPORT_WAREHOUSE_BY_PRODUCT){
             FULL_URI = Constant.REQUEST_URI + "/bot/product";
-        }else if (state == BotState.GET_CONTRACTOR_IN_API) {
+        }else if (state == BotState.GET_CONTRACTORS) {
             FULL_URI = Constant.REQUEST_URI + "/bot/contractor";
-        }else {
+        } else if (state == BotState.GET_TANKS) {
+            FULL_URI = Constant.REQUEST_URI + "/bot/tank";
+        } else {
             FULL_URI = Constant.REQUEST_URI + "/bot/product/group";
-
         }
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -145,15 +146,17 @@ public class Api1CService {
             fullUri = fullUri + "/warehouse";
         } else if (reportDTO.getTypeReport().equals("TRADE")) {
             fullUri = fullUri + "/sale";
+        } else if (reportDTO.getTypeReport().equals("TRADE_ALKAN")) {
+            fullUri = fullUri + "/sale/alkan";
         } else if (reportDTO.getTypeReport().equals("CASH_BOX")) {
             fullUri = fullUri + "/cashbox";
-        } else if (reportDTO.getTypeReport().equals(utilService.getTextByLanguage(reportDTO.getClientId(), Constant.AKT_SVERKA))) {
+        } else if (reportDTO.getTypeReport().equals("AKT_SVERKA")) {
             if (userService.getRole(reportDTO.getClientId()).equals("Contractor")){
                 return getReportContractor(reportDTO);
             }else {
                 fullUri = fullUri + "/sverka";
             }
-        } else if (reportDTO.getTypeReport().equals(utilService.getTextByLanguage(reportDTO.getClientId(), Constant.AKT_SVERKA_TOVAR))) {
+        } else if (reportDTO.getTypeReport().equals("AKT_SVERKA_TOVAR")) {
             if (userService.getRole(reportDTO.getClientId()).equals("Contractor")){
                 return getReportContractor(reportDTO);
             }else {
@@ -163,6 +166,8 @@ public class Api1CService {
             fullUri = fullUri + "/dc";
         }else if (reportDTO.getTypeReport().equals("COST")) {
             fullUri = fullUri + "/expense";
+        }else if (reportDTO.getTypeReport().equals("CASH_BOX_SMENA")) {
+            fullUri = fullUri + "/shift";
         }
 
         try {
@@ -192,9 +197,10 @@ public class Api1CService {
                 .methodType("REPORT")
                 .startDate(reportDTO.getStartDate())
                 .endDate(reportDTO.getEndDate())
-                .contractorId(reportDTO.getClientId())
+                .clientId(reportDTO.getClientId())
                 .typeFile(reportDTO.getTypeFile())
-                .reportId((reportDTO.getTypeReport().equals(utilService.getTextByLanguage(reportDTO.getClientId(), Constant.AKT_SVERKA))) ? 1 : 2).build();
+                .reportId(2).build();
+//                .reportId((reportDTO.getTypeReport().equals(utilService.getTextByLanguage(reportDTO.getClientId(), Constant.AKT_SVERKA))) ? 1 : 2).build();
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setBasicAuth(Security.LOGIN, Security.PASSWORD, StandardCharsets.UTF_8);
@@ -218,7 +224,6 @@ public class Api1CService {
 
     public void saveClient(Users user) {
         RestTemplateBuilder restTemplate = new RestTemplateBuilder();
-
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setBasicAuth(Security.LOGIN, Security.PASSWORD, StandardCharsets.UTF_8);
@@ -232,6 +237,33 @@ public class Api1CService {
                     .exchange(Constant.REQUEST_URI + "/bot/save/client", HttpMethod.POST, entity, byte[].class);
         } catch (Exception e) {
             System.out.println(LocalDate.now() + " " + user.getChatId() + ", " + ", User yaratishda xatolik");
+        }
+    }
+
+    public String sendReportTank(String chatId, SearchDTO searchDTO) {
+
+        RestTemplateBuilder restTemplate = new RestTemplateBuilder();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth(Security.LOGIN, Security.PASSWORD, StandardCharsets.UTF_8);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            searchDTO.setTankID(searchDTO.getUniqueID());
+            HttpEntity<SearchDTO> entity = new HttpEntity<>(searchDTO, headers);
+
+            ResponseEntity<byte[]> response = restTemplate
+                    .setConnectTimeout(Duration.ofSeconds(15))
+                    .setReadTimeout(Duration.ofSeconds(60))
+                    .build()
+                    .exchange(Constant.REQUEST_URI + "/bot/analysis", HttpMethod.POST, entity, byte[].class);
+            byte[] responseBody = response.getBody();
+            if (responseBody != null) {
+                String text = new String(responseBody, StandardCharsets.UTF_8);
+                return text;
+            } else {
+                return "";
+            }
+        } catch (Exception e) {
+            return "ERROR";
         }
     }
 }
