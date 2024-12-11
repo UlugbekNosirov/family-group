@@ -45,6 +45,8 @@ public class CallBackDataProcessor {
                     case "season" -> state = BotState.SEND_BY_SEASON;
                     case "year" -> state = BotState.SEND_BY_YEAR;
                     case "other" -> state = BotState.SEND_CALENDAR;
+                    case "YES" -> state = BotState.SEND_ADS_USERS;
+                    case "NOYES", "WITHOUT_CAPTION" -> state = BotState.GET_ADS;
                 }
                 switch (state) {
                     case START -> {
@@ -97,9 +99,15 @@ public class CallBackDataProcessor {
 
             case EDIT_START_DATE, EDIT_END_DATE -> feignService.editDate(chatId, messageId, callBackData);
 
+            case GET_ADS -> feignService.getAnotherAds(chatId, messageId, callBackData);
+
+            case SEND_ADS_USERS -> feignService.sendUsersAds(chatId, messageId, callBackData);
+
             case EDIT2XLSX, EDIT2JPG, EDIT2PDF -> feignService.saveTypeFile(state, chatId, messageId, callBackData);
 
             case SAVE_START_DATE -> feignService.saveStartDate(message, chatId, callBackData);
+
+            case SEND_EXCEPTION -> feignService.sendChoosingDateError(chatId, messageId);
 
             case REPORTS, SEND_BY_MONTH, SEND_BY_DAY, SEND_BY_WEEK, SEND_BY_LAST_MONTH, SEND_BY_SEASON, SEND_BY_YEAR ->
                     feignService.saveDates(state, chatId, messageId, callBackData);

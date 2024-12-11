@@ -17,6 +17,7 @@ public class NotificationBotApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(NotificationBotApplication.class, args);
+        System.out.println(REQUEST_FULL_PATH + Method.SET_WEB_HOOK +  GLOBAL_URL+ MY_URL);
         System.out.println(restTemplate().getForObject(REQUEST_FULL_PATH + Method.SET_WEB_HOOK +  GLOBAL_URL+ MY_URL, String.class));
     }
     @Bean

@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>uz.alif_coder</groupId>
-    <artifactId>NotificationBotALKAN</artifactId>
+    <artifactId>TEGIRMON_JAR</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>NotificationBotALKAN</name>
-    <description>NotificationBotALKAN</description>
+    <name>TEGIRMON_JAR</name>
+    <description>TEGIRMON_JAR</description>
     <properties>
         <java.version>17</java.version>
         <spring-cloud.version>2021.0.0</spring-cloud.version>
@@ -30,6 +30,13 @@
             <artifactId>spire.pdf</artifactId>
             <version>9.9.6</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>java-dotenv</artifactId>
+            <version>5.2.2</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>

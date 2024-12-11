@@ -9,19 +9,15 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import uz.dataFin.notificationbot.feign.TelegramFeign;
-import uz.dataFin.notificationbot.model.ReportDTO;
 import uz.dataFin.notificationbot.model.Users;
 import uz.dataFin.notificationbot.repository.UserRepository;
 import uz.dataFin.notificationbot.utils.BotState;
-import uz.dataFin.notificationbot.utils.Constant;
+
 
 import java.nio.file.Path;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Month;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -197,23 +193,6 @@ public class UtilService {
         return false;
     }
 
-    public String uiTextSVERKA(String chatId, ReportDTO reportDTO, String branchName){
-        return getTextByLanguage(chatId, Constant.START_DATE)+reportDTO.getStartDate()+"\n"
-                +getTextByLanguage(chatId, Constant.END_DATE)+reportDTO.getEndDate()+"\n"
-                +getTextByLanguage(chatId, Constant.BRANCH_NAME)+ branchName+"\n";
-    }
-
-    public String uiTextWAREHOUSE(String chatId, ReportDTO reportDTO, String warehouse){
-        return getTextByLanguage(chatId, Constant.START_DATE)+reportDTO.getStartDate()+"\n"
-                +getTextByLanguage(chatId, Constant.END_DATE)+reportDTO.getEndDate()+"\n"
-                +getTextByLanguage(chatId, Constant.WAREHOUSE)+": " +warehouse+"\n";
-    }
-
-    public String uiTextCashBox(String chatId, ReportDTO reportDTO, String warehouseById) {
-        return getTextByLanguage(chatId, Constant.START_DATE)+reportDTO.getStartDate()+"\n"
-                +getTextByLanguage(chatId, Constant.END_DATE)+reportDTO.getEndDate()+"\n"
-                +getTextByLanguage(chatId, Constant.CASH_BOX)+": " +warehouseById+"\n";
-    }
     public void sendMessage(String chatId, String text, ReplyKeyboardMarkup replyKeyboardMarkup, InlineKeyboardMarkup inlineKeyboardMarkup){
         try {
             SendMessage sendMessage = new SendMessage(chatId, text);
@@ -221,6 +200,7 @@ public class UtilService {
                 sendMessage.setReplyMarkup(replyKeyboardMarkup);
             else
                 sendMessage.setReplyMarkup(inlineKeyboardMarkup);
+
             feign.sendMessage(sendMessage);
         } catch (Exception e){
             System.out.println(e+"\n\nSendMessage error");

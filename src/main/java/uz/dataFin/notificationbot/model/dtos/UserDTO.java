@@ -1,4 +1,4 @@
-package uz.dataFin.notificationbot.payload;
+package uz.dataFin.notificationbot.model.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

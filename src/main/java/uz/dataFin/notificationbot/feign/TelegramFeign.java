@@ -21,6 +21,7 @@ public interface TelegramFeign extends Method {
 
     @PostMapping(ANSWER_INLINE_QUERY)
     Result answerInlineQuery(@RequestBody AnswerInlineQuery answerInlineQuery);
+
     @PostMapping(SEND_MESSAGE)
     Result sendMessage(@RequestBody SendMessage sendMessage);
 
@@ -38,7 +39,5 @@ public interface TelegramFeign extends Method {
 
     @PostMapping(EDIT_MESSAGE_REPLY_MARKUP)
     Result editMessageReplyMarkup(@RequestBody EditMessageReplyMarkup editMessageReplyMarkup);
-
-
 
 }

@@ -36,9 +36,6 @@ public class Users extends BaseModel {
     @Enumerated(value = EnumType.STRING)
     BotState state;
 
-    @ManyToMany
-    List<Market> marketList = new ArrayList<>();
-
     public Users(String chatId, String firstname, String lastname, String username, String role, BotState state, String language) {
         this.chatId = chatId;
         this.firstname = firstname;

@@ -13,10 +13,8 @@ import uz.dataFin.notificationbot.utils.Constant;
 public class SettingsProcessor {
     private final CallBackDataProcessor callBackDataProcessor;
     private final UtilService utilService;
-    private final WarehouseService warehouseService;
     private final FeignService feignService;
     private final UserService userService;
-    private final ReportService reportService;
     public static final String[] ReportAKTSteps = {"START", "GET_TYPE_FILE", "GET_LANGUAGE"};
 
     public void processor(Update update) {
@@ -34,7 +32,7 @@ public class SettingsProcessor {
                 STATE_NAME = BotState.GET_TYPE_FILE.name();
                 userService.updateUserState(chatId, BotState.GET_REPORT_COST);
             } else if (text.equals(utilService.getTextByLanguage(chatId, Constant.CHANGE_LANGUAGE))) {
-                STATE_NAME = BotState.GET_LANGUAGE.name(); //branchId ni save qilish kerak
+                STATE_NAME = BotState.GET_LANGUAGE.name();
                 userService.updateUserState(chatId, BotState.GET_LANGUAGE);
             }
             switch (STATE_NAME){

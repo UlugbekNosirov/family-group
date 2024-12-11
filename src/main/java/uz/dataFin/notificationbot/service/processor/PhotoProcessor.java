@@ -8,32 +8,35 @@ import uz.dataFin.notificationbot.service.FeignService;
 import uz.dataFin.notificationbot.service.UserService;
 import uz.dataFin.notificationbot.service.UtilService;
 import uz.dataFin.notificationbot.utils.BotState;
+import uz.dataFin.notificationbot.utils.Constant;
 
 @Service
 @RequiredArgsConstructor
-public class RegistrationProcessor {
+public class PhotoProcessor {
+    private final CallBackDataProcessor callBackDataProcessor;
     private final UtilService utilService;
     private final FeignService feignService;
     private final UserService userService;
+    public static final String[] ReportADSSteps = {"START", "GET_TYPE_FILE", "GET_LANGUAGE"};
 
     public void processor(Update update) {
         String chatId = utilService.getChatIdFromUpdate(update);
         BotState state = userService.getState(chatId);
         Message message = utilService.getMessageFromUpdate(update);
+        String STATE_NAME = state.name();
 
+        if (!userService.getRoleInURL(chatId).equals("Employee")) {
+            feignService.sendPanelBTNS(chatId);
+            return;
+        }
         if (update.hasMessage()) {
-            if (message.hasText()) {
-                state = userService.startCondition(update);
-            } else if (message.hasContact()) {
-                state = BotState.SAVE_CONTACT;
+            if (message.hasPhoto()) {
+                switch (STATE_NAME) {
+                    case "START" -> feignService.savePhotoOrCaption(chatId, message);
+                }
             }
+        } else if (update.hasCallbackQuery()) {
+            callBackDataProcessor.processor(update);
         }
-        switch (state){
-            case SEND_NAME -> feignService.sendName(chatId);
-            case GET_CONTACT -> feignService.sendContact(chatId);
-            case SAVE_CONTACT, SUCCESS -> feignService.saveContact(message, chatId);
-        }
-
-        userService.updateUserState(chatId, state);
     }
 }
