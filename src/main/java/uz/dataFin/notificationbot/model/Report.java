@@ -2,6 +2,7 @@ package uz.dataFin.notificationbot.model;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.checkerframework.common.aliasing.qual.Unique;
 
 import javax.persistence.Entity;
 
@@ -13,6 +14,7 @@ import javax.persistence.Entity;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class Report extends BaseModel {
+    @Unique
     String clientId;
     String warehouseID;
     String contractorID;

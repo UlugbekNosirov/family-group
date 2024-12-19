@@ -70,6 +70,8 @@ public class ReportService {
                 saveNew(chatId, "BALANCE");
             else if (callBackData.equals("/reklama"))
                 saveNew(chatId, "ADS");
+            else if (callBackData.equals(utilService.getTextByLanguage(chatId, Constant.APPEAL)))
+                saveNew(chatId, "APPEAL");
             else if (callBackData.equals(utilService.getTextByLanguage(chatId, Constant.SETTINGS)))
                 saveNew(chatId, "SETTINGS");
 

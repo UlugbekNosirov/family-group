@@ -28,6 +28,7 @@ public interface Constant {
     String END_DATE = "⏰Охирги сана -> /⏰Дата конец -> /⏰Oxirgi sana -> ";
     String CHOOSE_END_DATE = "Охирги сана танланг.../Выберите дату конец.../Oxirgi sana tanlang...";
     String SETTINGS = "⚙️Созламалар/⚙️Настройки/⚙️Sozlamalar";
+    String APPEAL = "\uD83D\uDCDDМурожаат/\uD83D\uDCDDОбращаться/\uD83D\uDCDDMurojaat";
     String CHOOSE_LANGUAGE = "▪️Тилни танланг.../▪️Выберите язык.../▪️Tilni tanlang...";
     String CHANGE_LANGUAGE = "\uD83C\uDF0DТилни ўзгартириш/\uD83C\uDF0DИзменить язык/\uD83C\uDF0DTilni o`zgartirish";
     String CHANGE_TYPE_FILE = "🗃Файл форматини ўзгартириш/🗃Изменить формат файла/🗃Fayl formatini o`zgartirish";
@@ -44,6 +45,28 @@ public interface Constant {
     String YES = "Ха✅/Да✅/Ha✅";
     String NOYES = "Йўқ❌/Нет❌/Yo'q❌";
     String ADS_TEXT = "Рекламани юборишингиз мумкин!/Вы можете разместить объявление!/Reklamani yuborishingiz mumkin!";
+    String APPEAL_TEXT = "Мурожаатингизни жўнатинг.../Отправьте запрос.../Murojaatingizni jo'nating...";
+    String CHECK_APPEAL_TEXT = "Мурожаатингизни тасдиқлайсизми?\n\n/Подтвердить заявку?\n\n/Murojaatingizni tasdiqlaysizmi?\n\n";
+    String STATUS_YES = "Хабарингиз гуруҳга юборилди✅/Ваше сообщение отправлено в группу✅/Xabaringiz guruhga yuborildi✅";
+    String STATUS_NO = "Мурожаат бекор қилинди❌/Заявка отменена❌/Murojaat bekor qilindi❌";
+    String TEMPLATE_APPEAL = "\uD83D\uDECE Янги мурожаат...\n" +
+            "\n" +
+            "\uD83D\uDC64 Мижоз: <user>\n" +
+            "\uD83D\uDCDE Тел рақам: <phone>\n" +
+            "\uD83D\uDCC5 Сана: <date>\n" +
+            "\uD83D\uDCDD Мурожаат:\n\n/" +
+            "\uD83D\uDECE Новое приложение...\n" +
+            "\n" +
+            "\uD83D\uDC64Клиент: <user>\n" +
+            "\uD83D\uDCDE Телефон: <phone>.\n" +
+            "\uD83D\uDCC5 Дата: <date>\n" +
+            "\uD83D\uDCDDПрименение:\n\n/" +
+            "\uD83D\uDECE Yangi murojaat...\n" +
+            "\n" +
+            "\uD83D\uDC64 Mijoz: <user>\n" +
+            "\uD83D\uDCDE Tel raqam: <phone>\n" +
+            "\uD83D\uDCC5 Sana: <date>\n" +
+            "\uD83D\uDCDD Murojaat:\n\n";
 
-    String REQUEST_URI = "http://94.158.51.88:88/TEGIRMON_24/hs";
+    String REQUEST_URI = "https://datafin1c.inmind.uz/OBID_AKA_INEO/hs";
 }

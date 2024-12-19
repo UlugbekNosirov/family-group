@@ -111,18 +111,21 @@ public class Keyboard {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
         KeyboardRow row = new KeyboardRow();
         KeyboardRow row2 = new KeyboardRow();
+        KeyboardRow row3 = new KeyboardRow();
         List<KeyboardRow> rowList = new ArrayList<>();
         markup.setOneTimeKeyboard(false);
         markup.setResizeKeyboard(true);
         markup.setSelective(true);
-        if (role.equals("Contractor")) {
+//        if (role.equals("Contractor")) {
             row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA)));
-//            row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA_TOVAR)));
+            row.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.AKT_SVERKA_TOVAR)));
             row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.BALANCE)));
             row2.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.SETTINGS)));
-        }
+            row3.add(new KeyboardButton(utilService.getTextByLanguage(chatId, Constant.APPEAL)));
+//        }
         rowList.add(row);
         rowList.add(row2);
+        rowList.add(row3);
         markup.setKeyboard(rowList);
         return markup;
     }

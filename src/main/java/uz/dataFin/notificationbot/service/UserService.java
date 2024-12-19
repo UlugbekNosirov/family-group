@@ -32,6 +32,9 @@ public class UserService {
         String chatId = utilService.getChatIdFromUpdate(update);
         if ((update.hasMessage() && Objects.isNull(update.getMessage())))
             return new UserDTO(BotState.UPDATE_IS_NULL);
+        if (update.hasMyChatMember()) {
+            return new UserDTO(BotState.ADD_NEW_GROUP);
+        }
         Optional<Users> optionalUser = userRepository.findByChatId(chatId);
 
         if (optionalUser.isPresent() && optionalUser.get().getPhone() != null) {
@@ -46,7 +49,8 @@ public class UserService {
             LocalDate lastDayOfMonthDate = currentDate.withDayOfMonth(
                     currentDate.getMonth().length(currentDate.isLeapYear()));
             try {
-                reportRepository.save(new Report(chatId,
+                reportRepository.save(new Report(
+                        chatId,
                         "",
                         "",
                         "",

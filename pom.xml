@@ -8,11 +8,11 @@
         <version>2.6.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>uz.alif_coder</groupId>
-    <artifactId>TEGIRMON_JAR</artifactId>
+    <groupId>datafin-bots</groupId>
+    <artifactId>INNEO-13-12-24</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>TEGIRMON_JAR</name>
-    <description>TEGIRMON_JAR</description>
+    <name>INNEO-13-12-24</name>
+    <description>INNEO-11-12-24</description>
     <properties>
         <java.version>17</java.version>
         <spring-cloud.version>2021.0.0</spring-cloud.version>

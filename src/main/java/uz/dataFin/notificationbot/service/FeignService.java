@@ -9,20 +9,17 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.NoopUserTokenHandler;
 import org.apache.http.message.BasicNameValuePair;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.PhotoSize;
-import org.telegram.telegrambots.meta.api.objects.Video;
+import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import uz.dataFin.notificationbot.feign.TelegramFeign;
 import uz.dataFin.notificationbot.helper.Keyboard;
-import uz.dataFin.notificationbot.model.Advertising;
-import uz.dataFin.notificationbot.model.Report;
-import uz.dataFin.notificationbot.model.Users;
+import uz.dataFin.notificationbot.model.*;
+import uz.dataFin.notificationbot.repository.AppealRepository;
 import uz.dataFin.notificationbot.utils.BotState;
 import uz.dataFin.notificationbot.utils.Constant;
 import uz.dataFin.notificationbot.utils.Security;
@@ -44,6 +41,7 @@ public class FeignService {
     private final ReportService reportService;
     private final ADSService adsService;
     private final TelegramFeign feign;
+    private final AppealRepository appealRepository;
 
 
     public void sendName(String chatId) {
@@ -65,7 +63,7 @@ public class FeignService {
                 utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CONTRACTOR), keyboard.panelBtns(userService.getRole(chatId), chatId), null);
             }
             case "Nobody" -> {
-                utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.ALREADY_REGISTRATION), keyboard.startBtn(), null);
+                utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.ALREADY_REGISTRATION), keyboard.panelBtns(userService.getRole(chatId), chatId), null);
             }
             case "null" -> {
                 utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.NO_INFO_ROLE), null, null);
@@ -354,5 +352,55 @@ public class FeignService {
             utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.EDIT_CAPTION), null, keyboard.editCaption(chatId));
 
         }
+    }
+
+    public void sendAppealText(String chatId) {
+        utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.APPEAL_TEXT), keyboard.panelBtns(userService.getRole(chatId), chatId), null);
+        userService.updateUserState(chatId, BotState.GET_APPEAL_TEXT);
+    }
+
+    public void checkAppealText(String chatId, String text) {
+        utilService.sendMessage(chatId, utilService.getTextByLanguage(chatId, Constant.CHECK_APPEAL_TEXT ) + templateForAppealText(userService.getByChatId(chatId), text), null, keyboard.editCaption(chatId));
+        userService.updateUserState(chatId, BotState.CHECK_APPEAL);
+        appealRepository.save(new Appeals(text, chatId, userService.getName(chatId), "NEW"));
+    }
+
+    public void sendAppealGroup(List<Groups> groups, Update update) {
+        try {
+            String chatId = utilService.getChatIdFromUpdate(update);
+            String appealText = "null";
+            if (appealRepository.findTopByClientIdOrderByCreatedAtDesc(chatId).isPresent()){
+                appealText = appealRepository.findTopByClientIdOrderByCreatedAtDesc(chatId).get().getAppealText();
+            }
+            for (Groups group : groups) {
+                if (group.getStatus().equals("administrator")) {
+                    utilService.sendMessage(group.getGroupId(), templateForAppealText(userService.getByChatId(chatId), appealText), null, null);
+                    utilService.sendMessage(chatId, "Xabaringiz "+group.getGroupName()+" guruhiga yuborildi!", keyboard.panelBtns(userService.getRole(chatId), chatId), null);
+                }
+            }
+            utilService.editMessageText(chatId, utilService.getMessageIdFromUpdate(update), templateForAppealText(userService.getByChatId(chatId), appealText) + "\n\n"+utilService.getTextByLanguage(chatId, Constant.STATUS_YES), null);
+            userService.updateUserState(chatId, BotState.DEFAULT);
+        }catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    private String templateForAppealText(Users users, String appealText){
+        return utilService.getTextByLanguage(users.getChatId(), Constant.TEMPLATE_APPEAL).replace("<user>", users.getFirstname()).replace("<phone>", users.getPhone()).replace("<date>", LocalDate.now().toString()) + appealText;
+    }
+
+    public void rejectAppeal(String chatId, Message message) {
+        String appealText = "null";
+        if (appealRepository.findTopByClientIdOrderByCreatedAtDesc(chatId).isPresent()){
+            appealText = appealRepository.findTopByClientIdOrderByCreatedAtDesc(chatId).get().getAppealText();
+        }
+        utilService.editMessageText(chatId, message.getMessageId(), templateForAppealText(userService.getByChatId(chatId), appealText) + "\n\n"+utilService.getTextByLanguage(chatId, Constant.STATUS_NO), null);
+        userService.updateUserState(chatId, BotState.DEFAULT);
+    }
+
+    public void sendInfoGroup(Map<Boolean, Groups> groupsMap, Update update) {
+        Groups groups = groupsMap.get(true);
+        String chatId = utilService.getChatIdFromUpdate(update);
+        utilService.sendMessage(chatId, "Guruh nomi: "+groups.getGroupName()+"\nBot huquqi: "+groups.getStatus()+"\nSana: "+LocalDate.now().toString(), keyboard.panelBtns(userService.getRole(chatId), chatId), null);
     }
 }

@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import uz.dataFin.notificationbot.model.Groups;
 import uz.dataFin.notificationbot.service.processor.*;
 import uz.dataFin.notificationbot.utils.BotState;
 
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -19,14 +21,21 @@ public class WebhookService {
     private final AKTSVERKAProcessor aktsverkaProcessor;
     private final CallBackDataProcessor callBackDataProcessor;
     private final RegistrationProcessor registrationProcessor;
+    private final AppealProcessor appealProcessor;
     private final SettingsProcessor settingsProcessor;
     private final BalanceProcessor balanceProcessor;
     private final AdvertisingProcessor advertisingProcessor;
+    private final GroupService groupService;
     private final VideoProcessor videoProcessor;
     private final PhotoProcessor photoProcessor;
 
     public void onUpdateToReceive(Update update) {
         BotState state = botService.getAndCheck(update);
+        if (state == BotState.ADD_NEW_GROUP){
+            Map<Boolean, Groups> groupsMap = groupService.saveNewGroup(update);
+            groupService.sendInfoGroup(groupsMap, update);
+            return;
+        }
         String chatId = utilService.getChatIdFromUpdate(update);
         if (state==BotState.UPDATE_IS_NULL){ utilService.sendMessage(chatId, "\uD83D\uDEABJarayonni qaytadan boshlang\uD83D\uDEAB", null, null); return;}
         Message message = utilService.getMessageFromUpdate(update);
@@ -54,6 +63,7 @@ public class WebhookService {
                     case "AKT_SVERKA", "AKT_SVERKA_TOVAR" -> aktsverkaProcessor.processor(update);
                     case "BALANCE" -> balanceProcessor.processor(update);
                     case "ADS" -> advertisingProcessor.processor(update);
+                    case "APPEAL" -> appealProcessor.processor(update);
                     case "SETTINGS" -> settingsProcessor.processor(update);
                 }
             } else if (message.hasPhoto()) {
@@ -62,7 +72,10 @@ public class WebhookService {
                 videoProcessor.processor(update);
             }
         } else if (update.hasCallbackQuery()) {
-            callBackDataProcessor.processor(update);
+            if (state == BotState.CHECK_APPEAL){
+                appealProcessor.processor(update);
+            }else
+                callBackDataProcessor.processor(update);
         }
     }
 }
